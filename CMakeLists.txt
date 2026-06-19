@@ -54,7 +54,6 @@ else()
     set(QRC_SOURCE resources/resources.qrc)
 endif()
 
-# Windows .exe 图标
 if(WIN32)
     set(APP_ICON resources/app.rc)
 endif()
@@ -91,6 +90,11 @@ target_link_libraries(${PROJECT_NAME} PRIVATE
     Qt6::Core
     Qt6::Gui
 )
+
+# Windows 专属：GUI 子系统（禁止控制台窗口）
+if(WIN32)
+    set_target_properties(${PROJECT_NAME} PROPERTIES WIN32_EXECUTABLE TRUE)
+endif()
 
 # Copy data directory to build output
 file(COPY data DESTINATION ${CMAKE_BINARY_DIR})
