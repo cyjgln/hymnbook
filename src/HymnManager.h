@@ -29,6 +29,8 @@ public:
 
     // 新增
     int addHymn(const Hymn &hymn);
+    // 批量新增（只发射一次 dataChanged）
+    void batchAddHymns(const QList<Hymn> &hymns);
     // 修改
     bool updateHymn(const Hymn &hymn);
     // 删除

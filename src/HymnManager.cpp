@@ -114,6 +114,17 @@ int HymnManager::addHymn(const Hymn &hymn)
     return h.id;
 }
 
+void HymnManager::batchAddHymns(const QList<Hymn> &hymns)
+{
+    for (const Hymn &hymn : hymns) {
+        Hymn h = hymn;
+        h.id = m_nextId++;
+        h.pageNumber = m_hymns.size() + 1;
+        m_hymns.append(h);
+    }
+    emit dataChanged();
+}
+
 bool HymnManager::updateHymn(const Hymn &updated)
 {
     for (int i = 0; i < m_hymns.size(); ++i) {

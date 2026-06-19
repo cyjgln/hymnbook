@@ -24,6 +24,7 @@ signals:
 
 private:
     void setupUI();
+    void batchImport();
 
     QListWidget *m_listWidget;
 };
