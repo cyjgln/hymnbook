@@ -30,3 +30,9 @@ Thumbs.db
 # 发布包
 *.zip
 *.tar.gz
+
+# Windows 交叉编译构建
+build_win/
+
+# aqtinstall 日志
+aqtinstall.log
