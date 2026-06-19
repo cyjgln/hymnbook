@@ -39,7 +39,7 @@ void AboutPage::setupUI()
         "    诗歌本"
         "  </h1>"
         "  <p style='text-align: center; color: #888; font-size: 14px;'>"
-        "    版本 1.0.0"
+        "    版本 1.1.0"
         "  </p>"
 
         "  <hr style='border: none; border-top: 1px solid #e0d5c8; margin: 20px 0;'>"

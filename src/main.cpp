@@ -127,7 +127,7 @@ int main(int argc, char *argv[])
     QApplication app(argc, argv);
     app.setOrganizationName(QStringLiteral("HymnBook"));
     app.setApplicationName(QStringLiteral("HymnBookApp"));
-    app.setApplicationVersion(QStringLiteral("1.0.0"));
+    app.setApplicationVersion(QStringLiteral("1.1.0"));
 
     app.setStyleSheet(QString::fromUtf8(globalStyleSheet));
 
