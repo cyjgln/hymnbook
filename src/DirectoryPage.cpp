@@ -14,8 +14,25 @@
 #include <QDateTime>
 #include <QRegularExpression>
 
+#include "DirectoryPage.h"
+#include "HymnManager.h"
+
+#include <QVBoxLayout>
+#include <QHBoxLayout>
+#include <QListWidget>
+#include <QPushButton>
+#include <QLabel>
+#include <QFont>
+#include <QFileDialog>
+#include <QFileInfo>
+#include <QMessageBox>
+#include <QDir>
+#include <QDateTime>
+#include <QRegularExpression>
+#include <QSpacerItem>
+
 DirectoryPage::DirectoryPage(QWidget *parent)
-    : QWidget(parent)
+    : QWidget(parent), m_emptyLabel(nullptr)
 {
     setupUI();
 
@@ -27,39 +44,64 @@ DirectoryPage::DirectoryPage(QWidget *parent)
 void DirectoryPage::setupUI()
 {
     auto *layout = new QVBoxLayout(this);
-    layout->setContentsMargins(20, 20, 20, 20);
+    layout->setContentsMargins(24, 24, 24, 24);
 
     // 标题
     auto *titleLabel = new QLabel(QStringLiteral("诗歌本"), this);
     titleLabel->setAlignment(Qt::AlignCenter);
-    QFont titleFont = titleLabel->font();
-    titleFont.setPointSize(24);
-    titleFont.setBold(true);
-    titleLabel->setFont(titleFont);
+    titleLabel->setObjectName(QStringLiteral("pageTitle"));
+    titleLabel->setStyleSheet(QStringLiteral(
+        "QLabel#pageTitle {"
+        "  color: #5a4a3a;"
+        "  font-size: 28px;"
+        "  font-weight: bold;"
+        "  padding: 8px 0 16px 0;"
+        "}"
+    ));
     layout->addWidget(titleLabel);
 
     // 按钮区域
     auto *buttonBar = new QHBoxLayout();
 
-    auto *addBtn = new QPushButton(QStringLiteral("新增歌谱"), this);
+    auto *addBtn = new QPushButton(QStringLiteral("＋ 新增歌谱"), this);
+    addBtn->setCursor(Qt::PointingHandCursor);
     connect(addBtn, &QPushButton::clicked, this, &DirectoryPage::addHymnRequested);
     buttonBar->addWidget(addBtn);
 
     auto *batchBtn = new QPushButton(QStringLiteral("批量导入"), this);
+    batchBtn->setObjectName(QStringLiteral("secondaryBtn"));
+    batchBtn->setCursor(Qt::PointingHandCursor);
     connect(batchBtn, &QPushButton::clicked, this, &DirectoryPage::batchImport);
     buttonBar->addWidget(batchBtn);
 
     buttonBar->addStretch();
 
     auto *aboutBtn = new QPushButton(QStringLiteral("说明"), this);
+    aboutBtn->setObjectName(QStringLiteral("secondaryBtn"));
+    aboutBtn->setCursor(Qt::PointingHandCursor);
     connect(aboutBtn, &QPushButton::clicked, this, &DirectoryPage::aboutRequested);
     buttonBar->addWidget(aboutBtn);
     layout->addLayout(buttonBar);
+
+    // 空状态提示
+    m_emptyLabel = new QLabel(this);
+    m_emptyLabel->setAlignment(Qt::AlignCenter);
+    m_emptyLabel->setObjectName(QStringLiteral("emptyHint"));
+    m_emptyLabel->setStyleSheet(QStringLiteral(
+        "QLabel#emptyHint {"
+        "  color: #b8ad9e;"
+        "  font-size: 16px;"
+        "  padding: 60px 20px;"
+        "}"
+    ));
+    m_emptyLabel->setText(QStringLiteral("暂无诗歌\n点击「新增歌谱」或「批量导入」添加"));
+    layout->addWidget(m_emptyLabel);
 
     // 诗歌列表
     m_listWidget = new QListWidget(this);
     m_listWidget->setFont(QFont(m_listWidget->font().family(), 14));
     m_listWidget->setSpacing(6);
+    m_listWidget->setFrameShape(QFrame::NoFrame);
     layout->addWidget(m_listWidget, 1);
 
     // 点击跳转
@@ -154,6 +196,12 @@ void DirectoryPage::refresh()
     m_listWidget->clear();
 
     const QList<Hymn> &hymns = HymnManager::instance().allHymns();
+
+    // 切换空状态提示
+    bool empty = hymns.isEmpty();
+    m_emptyLabel->setVisible(empty);
+    m_listWidget->setVisible(!empty);
+
     for (int i = 0; i < hymns.size(); ++i) {
         const Hymn &h = hymns[i];
         QString text = QStringLiteral("%1  %2")

@@ -33,6 +33,8 @@ void HymnViewerPage::setupUI()
     toolbar->setMovable(false);
 
     auto *backBtn = new QPushButton(QStringLiteral("← 返回目录"), this);
+    backBtn->setObjectName(QStringLiteral("secondaryBtn"));
+    backBtn->setCursor(Qt::PointingHandCursor);
     connect(backBtn, &QPushButton::clicked, this, &HymnViewerPage::directoryRequested);
     toolbar->addWidget(backBtn);
 
@@ -90,17 +92,27 @@ void HymnViewerPage::setupUI()
     // 底部歌名和页码
     m_titleLabel = new QLabel(this);
     m_titleLabel->setAlignment(Qt::AlignCenter);
-    QFont titleFont = m_titleLabel->font();
-    titleFont.setPointSize(16);
-    titleFont.setBold(true);
-    m_titleLabel->setFont(titleFont);
+    m_titleLabel->setObjectName(QStringLiteral("hymnTitle"));
+    m_titleLabel->setStyleSheet(QStringLiteral(
+        "QLabel#hymnTitle {"
+        "  color: #3a2a1a;"
+        "  font-size: 18px;"
+        "  font-weight: bold;"
+        "  padding: 6px 0 2px 0;"
+        "}"
+    ));
     layout->addWidget(m_titleLabel);
 
     m_pageLabel = new QLabel(this);
     m_pageLabel->setAlignment(Qt::AlignCenter);
-    QFont pageFont = m_pageLabel->font();
-    pageFont.setPointSize(11);
-    m_pageLabel->setFont(pageFont);
+    m_pageLabel->setObjectName(QStringLiteral("hymnPage"));
+    m_pageLabel->setStyleSheet(QStringLiteral(
+        "QLabel#hymnPage {"
+        "  color: #8a7a6a;"
+        "  font-size: 12px;"
+        "  padding: 0 0 8px 0;"
+        "}"
+    ));
     layout->addWidget(m_pageLabel);
 
     // 默认无图片状态

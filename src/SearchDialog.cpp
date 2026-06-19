@@ -8,6 +8,7 @@
 #include <QLabel>
 #include <QKeyEvent>
 #include <QShowEvent>
+#include <QFrame>
 
 SearchDialog::SearchDialog(QWidget *parent)
     : QDialog(parent)
@@ -18,11 +19,25 @@ SearchDialog::SearchDialog(QWidget *parent)
 void SearchDialog::setupUI()
 {
     setWindowTitle(QStringLiteral("搜索诗歌"));
-    setFixedSize(400, 500);
+    setFixedSize(420, 520);
     setWindowFlags(windowFlags() & ~Qt::WindowContextHelpButtonHint);
 
     auto *layout = new QVBoxLayout(this);
-    layout->setContentsMargins(15, 15, 15, 15);
+    layout->setContentsMargins(20, 20, 20, 20);
+
+    // 标题
+    auto *titleLabel = new QLabel(QStringLiteral("搜索诗歌"), this);
+    titleLabel->setAlignment(Qt::AlignCenter);
+    titleLabel->setObjectName(QStringLiteral("dialogTitle"));
+    titleLabel->setStyleSheet(QStringLiteral(
+        "QLabel#dialogTitle {"
+        "  color: #5a4a3a;"
+        "  font-size: 18px;"
+        "  font-weight: bold;"
+        "  padding: 0 0 10px 0;"
+        "}"
+    ));
+    layout->addWidget(titleLabel);
 
     m_searchInput = new QLineEdit(this);
     m_searchInput->setPlaceholderText(QStringLiteral("输入歌名关键字..."));
@@ -35,6 +50,7 @@ void SearchDialog::setupUI()
     m_resultList = new QListWidget(this);
     m_resultList->setFont(QFont(m_resultList->font().family(), 13));
     m_resultList->setSpacing(4);
+    m_resultList->setFrameShape(QFrame::NoFrame);
     layout->addWidget(m_resultList, 1);
 
     // 实时搜索：输入变化即触发

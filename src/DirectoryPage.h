@@ -2,6 +2,7 @@
 #define DIRECTORYPAGE_H
 
 #include <QWidget>
+#include <QLabel>
 #include "Hymn.h"
 
 class QListWidget;
@@ -27,6 +28,7 @@ private:
     void batchImport();
 
     QListWidget *m_listWidget;
+    QLabel *m_emptyLabel;
 };
 
 #endif // DIRECTORYPAGE_H
