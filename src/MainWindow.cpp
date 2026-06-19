@@ -193,8 +193,9 @@ void MainWindow::switchToHymnViewer(int hymnIndex)
     if (hymnIndex < 0 || hymnIndex >= HymnManager::instance().count())
         return;
 
-    m_hymnViewerPage->loadHymn(hymnIndex);
+    // 先切换到歌谱页，确保页面可见、视口尺寸正确
     switchToPage(HymnViewerPageIndex);
+    m_hymnViewerPage->loadHymn(hymnIndex);
 }
 
 void MainWindow::switchToAbout()

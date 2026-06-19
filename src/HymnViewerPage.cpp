@@ -11,6 +11,7 @@
 #include <QToolBar>
 #include <QFont>
 #include <QPixmap>
+#include <QGraphicsPixmapItem>
 #include <QFileInfo>
 #include <QDir>
 #include <cmath>
@@ -133,7 +134,9 @@ void HymnViewerPage::loadHymn(int index)
         fullPath = QDir::cleanPath(fullPath);
         QPixmap pixmap(fullPath);
         if (!pixmap.isNull()) {
-            m_scene->addPixmap(pixmap);
+            auto *item = m_scene->addPixmap(pixmap);
+            // 明确设置场景矩形为图片实际尺寸，确保 fitInView 能正确计算缩放比
+            m_scene->setSceneRect(item->boundingRect());
             m_graphicsView->zoomReset();
             return;
         }
