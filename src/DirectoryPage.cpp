@@ -21,6 +21,7 @@
 
 #include "DirectoryPage.h"
 #include "HymnManager.h"
+#include "HymnDelegate.h"
 
 #include <QVBoxLayout>
 #include <QHBoxLayout>
@@ -137,6 +138,8 @@ void DirectoryPage::setupUI()
     m_listWidget->setFrameShape(QFrame::NoFrame);
     m_listWidget->setVerticalScrollBarPolicy(Qt::ScrollBarAsNeeded);
     m_listWidget->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+    // 自定义委托：可靠文字换行（跨平台）
+    m_listWidget->setItemDelegate(new HymnDelegate(this));
     containerLayout->addWidget(m_listWidget, 1);
 
     layout->addWidget(listContainer, 1);
