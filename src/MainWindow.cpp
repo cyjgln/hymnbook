@@ -74,16 +74,13 @@ void MainWindow::initData()
         }
     }
 
-    // Priority 3: 真正没有数据 → 在持久化路径创建初始数据
-    qWarning() << "未找到 hymns.json，将在 AppDataLocation 创建初始数据";
+    // Priority 3: 真正没有数据 → 在持久化路径创建空数据文件
+    qWarning() << "未找到 hymns.json，将在 AppDataLocation 创建空数据";
     QDir().mkpath(appDataDir + QStringLiteral("/data"));
     QDir().mkpath(appDataDir + QStringLiteral("/images"));
 
     HymnManager::instance().load(primaryPath);
-    Hymn sample;
-    sample.title = QStringLiteral("奇异恩典");
-    HymnManager::instance().addHymn(sample);
-    HymnManager::instance().save();
+    HymnManager::instance().save();  // 写入空数组 []
 }
 
 void MainWindow::setupUI()
