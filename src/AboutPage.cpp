@@ -1,3 +1,8 @@
+// Copyright (c) 2026 cyjgln. All rights reserved.
+// Use of this source code is governed by a MIT-style license that can be
+// found in the LICENSE file.
+
+
 #include "AboutPage.h"
 
 #include <QVBoxLayout>
@@ -95,6 +100,10 @@ void AboutPage::setupUI()
         "  <p style='text-align: center; color: #999; font-size: 12px; line-height: 1.6;'>"
         "    适用于教会聚会、主日敬拜、祷告会等场景<br>"
         "    数据本地存储，无需网络"
+        "  </p>"
+
+        "  <p style='text-align: center; color: #bbb; font-size: 11px; margin-top: 16px;'>"
+        "    Copyright &copy; 2026 cyjgln. All rights reserved."
         "  </p>"
 
         "</div>"

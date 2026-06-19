@@ -1,3 +1,8 @@
+// Copyright (c) 2026 cyjgln. All rights reserved.
+// Use of this source code is governed by a MIT-style license that can be
+// found in the LICENSE file.
+
+
 #ifndef MAINWINDOW_H
 #define MAINWINDOW_H
 

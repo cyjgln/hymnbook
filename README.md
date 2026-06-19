@@ -1,8 +1,11 @@
 # 诗歌本 HymnBookApp
 
+![license](https://img.shields.io/badge/license-MIT-blue)
+![version](https://img.shields.io/badge/version-1.1.0-green)
+
 教会诗歌本软件 — 用于聚会、主日敬拜、祷告会、小组聚会等场景。
 
-主要功能：浏览目录、查看歌谱、搜索诗歌、全屏投影、新增/修改/删除歌谱。
+主要功能：浏览目录、查看歌谱、搜索诗歌、全屏投影、新增/修改/删除歌谱、批量导入。
 
 ---
 
