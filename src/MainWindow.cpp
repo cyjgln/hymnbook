@@ -13,6 +13,7 @@
 #include <QDir>
 #include <QMessageBox>
 #include <QDebug>
+#include <QStandardPaths>
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
@@ -27,35 +28,62 @@ MainWindow::MainWindow(QWidget *parent)
 
 void MainWindow::initData()
 {
-    // 数据文件路径：优先查找 exe 同级目录下的 data/hymns.json
-    QStringList searchPaths = {
+    // 持久化数据路径：用户应用数据目录（Linux ~/.local/share/HymnBook/HymnBookApp/）
+    QString appDataDir = QStandardPaths::writableLocation(QStandardPaths::AppDataLocation);
+    QString primaryPath = appDataDir + QStringLiteral("/data/hymns.json");
+
+    // Priority 1: 持久化路径已存在 → 直接加载
+    if (QFile::exists(primaryPath)) {
+        if (HymnManager::instance().load(primaryPath)) {
+            qDebug() << "数据加载成功:" << primaryPath;
+            return;
+        }
+    }
+
+    // Priority 2: 从旧位置（编译目录等）迁移到持久化路径
+    QStringList legacyPaths = {
         QCoreApplication::applicationDirPath() + QStringLiteral("/data/hymns.json"),
         QDir::currentPath() + QStringLiteral("/data/hymns.json"),
     };
 
-    bool loaded = false;
-    for (const QString &path : searchPaths) {
-        if (QFile::exists(path)) {
-            loaded = HymnManager::instance().load(path);
-            if (loaded) {
-                qDebug() << "数据加载成功:" << path;
-                break;
+    for (const QString &legacyPath : legacyPaths) {
+        if (legacyPath == primaryPath) continue;
+        if (!QFile::exists(legacyPath)) continue;
+
+        // 迁移数据文件
+        QDir().mkpath(appDataDir + QStringLiteral("/data"));
+        if (QFile::copy(legacyPath, primaryPath)) {
+            // 迁移 images 目录
+            QString legacyImages = QFileInfo(legacyPath).absolutePath()
+                                   + QStringLiteral("/../images");
+            QString newImages = appDataDir + QStringLiteral("/images");
+            if (QDir(legacyImages).exists()) {
+                QDir().mkpath(newImages);
+                for (const QFileInfo &fi :
+                     QDir(legacyImages).entryInfoList(QDir::Files | QDir::NoDotAndDotDot)) {
+                    QFile::copy(fi.absoluteFilePath(),
+                                newImages + QStringLiteral("/") + fi.fileName());
+                }
+            }
+
+            // 从新位置加载（m_filePath 指向持久化路径）
+            if (HymnManager::instance().load(primaryPath)) {
+                qDebug() << "旧数据已迁移:" << legacyPath << "→" << primaryPath;
+                return;
             }
         }
     }
 
-    if (!loaded) {
-        qWarning() << "未找到 hymns.json，将使用空数据";
-        // 首次运行时，尝试在当前目录创建初始数据
-        QString targetPath = QDir::currentPath() + QStringLiteral("/data/hymns.json");
-        QDir().mkpath(QDir::currentPath() + QStringLiteral("/data"));
-        HymnManager::instance().load(targetPath);
-        // 添加一首示例数据
-        Hymn sample;
-        sample.title = QStringLiteral("奇异恩典");
-        HymnManager::instance().addHymn(sample);
-        HymnManager::instance().save();
-    }
+    // Priority 3: 真正没有数据 → 在持久化路径创建初始数据
+    qWarning() << "未找到 hymns.json，将在 AppDataLocation 创建初始数据";
+    QDir().mkpath(appDataDir + QStringLiteral("/data"));
+    QDir().mkpath(appDataDir + QStringLiteral("/images"));
+
+    HymnManager::instance().load(primaryPath);
+    Hymn sample;
+    sample.title = QStringLiteral("奇异恩典");
+    HymnManager::instance().addHymn(sample);
+    HymnManager::instance().save();
 }
 
 void MainWindow::setupUI()

@@ -41,6 +41,7 @@ bool HymnManager::load(const QString &filePath)
             m_nextId = h.id + 1;
     }
 
+    emit dataChanged();
     return true;
 }
 
