@@ -37,6 +37,13 @@ mkdir -p "${DEPLOY_DIR}"
 # Copy exe
 cp "${EXE}" "${DEPLOY_DIR}/"
 
+# Create qt.conf to ensure plugin paths are correct
+cat > "${DEPLOY_DIR}/qt.conf" << EOF
+[Paths]
+Prefix = .
+Plugins = plugins
+EOF
+
 # Copy data (empty JSON for fresh start)
 cp -r "${SCRIPT_DIR}/data" "${DEPLOY_DIR}/data"
 # Create empty images directory for first-run
@@ -55,30 +62,22 @@ for dll in \
     fi
 done
 
-# Collect MinGW runtime DLLs
-echo "  Collecting MinGW runtime DLLs..."
-MINGW_SEARCH_DIRS=(
-    "/usr/x86_64-w64-mingw32/lib"
-    "/usr/lib/gcc/x86_64-w64-mingw32/10-posix"
-    "/usr/lib/gcc/x86_64-w64-mingw32/10-win32"
-    "$(dirname "$(x86_64-w64-mingw32-g++ -print-file-name=libgcc_s_seh-1.dll 2>/dev/null)")"
-)
+# Collect MinGW runtime DLLs (use Qt-bundled MinGW 11.2, matching Qt build)
+echo "  Collecting MinGW runtime DLLs (from Qt bundle)..."
 for dll in libgcc_s_seh-1.dll libstdc++-6.dll libwinpthread-1.dll; do
-    for dir in "${MINGW_SEARCH_DIRS[@]}"; do
-        f="${dir}/${dll}"
-        if [ -f "$f" ]; then
-            cp "$f" "${DEPLOY_DIR}/"
-            echo "    ${dll}"
-            break
-        fi
-    done
+    f="${QT_WIN}/bin/${dll}"
+    if [ -f "$f" ]; then
+        cp "$f" "${DEPLOY_DIR}/"
+        echo "    ${dll} (Qt-bundled)"
+    fi
 done
 
 # Strip debug info from MinGW DLLs to reduce size
 echo "  Stripping debug symbols..."
-x86_64-w64-mingw32-strip --strip-unneeded "${DEPLOY_DIR}/"lib*.dll 2>/dev/null || true
+x86_64-w64-mingw32-strip --strip-unneeded "${DEPLOY_DIR}/lib*.dll" 2>/dev/null || true
+x86_64-w64-mingw32-strip --strip-unneeded "${DEPLOY_DIR}/Qt6*.dll" 2>/dev/null || true
 
-# D3D compiler (optional, needed for some GUI effects)
+# D3D compiler (Qt ANGLE fallback, needed for DirectX rendering)
 if [ -f "${QT_WIN}/bin/d3dcompiler_47.dll" ]; then
     cp "${QT_WIN}/bin/d3dcompiler_47.dll" "${DEPLOY_DIR}/"
     echo "    d3dcompiler_47.dll"
