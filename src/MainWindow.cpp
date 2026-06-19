@@ -86,7 +86,7 @@ void MainWindow::initData()
 void MainWindow::setupUI()
 {
     setWindowTitle(QStringLiteral("诗歌本"));
-    resize(1200, 800);
+    resize(1400, 800);
     setMinimumSize(800, 600);
 
     m_stackedWidget = new QStackedWidget(this);
