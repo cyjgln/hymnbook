@@ -1,0 +1,32 @@
+# 构建输出
+build/
+cmake-build-*/
+CMakeCache.txt
+CMakeFiles/
+Makefile
+cmake_install.cmake
+
+# IDE 文件
+.idea/
+.vscode/
+*.pro.user
+*.swp
+*.swo
+*~
+
+# Qt Creator
+*.autosave
+
+# 测试
+test_hymn_manager
+
+# Windows 交叉编译
+/tmp/
+
+# 操作系统文件
+.DS_Store
+Thumbs.db
+
+# 发布包
+*.zip
+*.tar.gz

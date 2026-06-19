@@ -1,0 +1,31 @@
+#ifndef DIRECTORYPAGE_H
+#define DIRECTORYPAGE_H
+
+#include <QWidget>
+#include "Hymn.h"
+
+class QListWidget;
+
+class DirectoryPage : public QWidget
+{
+    Q_OBJECT
+
+public:
+    explicit DirectoryPage(QWidget *parent = nullptr);
+    ~DirectoryPage() override = default;
+
+    /// 从 HymnManager 重新加载目录
+    void refresh();
+
+signals:
+    void hymnSelected(int hymnIndex);
+    void aboutRequested();
+    void addHymnRequested();
+
+private:
+    void setupUI();
+
+    QListWidget *m_listWidget;
+};
+
+#endif // DIRECTORYPAGE_H
