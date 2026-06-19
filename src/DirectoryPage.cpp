@@ -84,7 +84,28 @@ void DirectoryPage::setupUI()
     buttonBar->addWidget(aboutBtn);
     layout->addLayout(buttonBar);
 
-    // 空状态提示
+    // 分隔线
+    layout->addSpacing(4);
+    auto *separator = new QFrame(this);
+    separator->setFrameShape(QFrame::HLine);
+    separator->setStyleSheet(QStringLiteral("QFrame { color: #e0d5c8; }"));
+    layout->addWidget(separator);
+    layout->addSpacing(8);
+
+    // 列表容器（略有不同的背景色，与按钮栏区分）
+    auto *listContainer = new QFrame(this);
+    listContainer->setObjectName(QStringLiteral("listContainer"));
+    listContainer->setStyleSheet(QStringLiteral(
+        "QFrame#listContainer {"
+        "  background-color: #ede4d8;"
+        "  border-radius: 8px;"
+        "  padding: 8px;"
+        "}"
+    ));
+    auto *containerLayout = new QVBoxLayout(listContainer);
+    containerLayout->setContentsMargins(8, 8, 8, 8);
+
+    // 空状态提示（放在容器内）
     m_emptyLabel = new QLabel(this);
     m_emptyLabel->setAlignment(Qt::AlignCenter);
     m_emptyLabel->setObjectName(QStringLiteral("emptyHint"));
@@ -96,14 +117,14 @@ void DirectoryPage::setupUI()
         "}"
     ));
     m_emptyLabel->setText(QStringLiteral("暂无诗歌\n点击「新增歌谱」或「批量导入」添加"));
-    layout->addWidget(m_emptyLabel);
+    containerLayout->addWidget(m_emptyLabel);
 
     // 诗歌列表（网格布局，自动多列）
     m_listWidget = new QListWidget(this);
     m_listWidget->setViewMode(QListView::IconMode);
     m_listWidget->setIconSize(QSize(0, 0));
-    m_listWidget->setGridSize(QSize(520, 72));
-    m_listWidget->setSpacing(12);
+    m_listWidget->setGridSize(QSize(360, 72));
+    m_listWidget->setSpacing(10);
     m_listWidget->setResizeMode(QListView::Adjust);
     m_listWidget->setWordWrap(true);
     m_listWidget->setMovement(QListView::Static);
@@ -111,7 +132,9 @@ void DirectoryPage::setupUI()
     m_listWidget->setFrameShape(QFrame::NoFrame);
     m_listWidget->setVerticalScrollBarPolicy(Qt::ScrollBarAsNeeded);
     m_listWidget->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
-    layout->addWidget(m_listWidget, 1);
+    containerLayout->addWidget(m_listWidget, 1);
+
+    layout->addWidget(listContainer, 1);
 
     // 点击跳转
     connect(m_listWidget, &QListWidget::itemClicked, this, [this](QListWidgetItem *item) {
