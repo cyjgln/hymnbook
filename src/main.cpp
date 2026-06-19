@@ -70,8 +70,7 @@ static const char *globalStyleSheet = R"(
         background-color: #ffffff;
         border: 1px solid #e0d5c8;
         border-radius: 8px;
-        padding: 14px 20px;
-        margin: 5px 0px;
+        padding: 18px 22px;
         color: #3a2a1a;
         font-size: 15px;
     }

@@ -30,6 +30,7 @@
 #include <QDateTime>
 #include <QRegularExpression>
 #include <QSpacerItem>
+#include <QListView>
 
 DirectoryPage::DirectoryPage(QWidget *parent)
     : QWidget(parent), m_emptyLabel(nullptr)
@@ -97,11 +98,19 @@ void DirectoryPage::setupUI()
     m_emptyLabel->setText(QStringLiteral("暂无诗歌\n点击「新增歌谱」或「批量导入」添加"));
     layout->addWidget(m_emptyLabel);
 
-    // 诗歌列表
+    // 诗歌列表（网格布局，自动多列）
     m_listWidget = new QListWidget(this);
-    m_listWidget->setFont(QFont(m_listWidget->font().family(), 14));
-    m_listWidget->setSpacing(6);
+    m_listWidget->setViewMode(QListView::IconMode);
+    m_listWidget->setIconSize(QSize(0, 0));
+    m_listWidget->setGridSize(QSize(520, 72));
+    m_listWidget->setSpacing(12);
+    m_listWidget->setResizeMode(QListView::Adjust);
+    m_listWidget->setWordWrap(true);
+    m_listWidget->setMovement(QListView::Static);
+    m_listWidget->setUniformItemSizes(true);
     m_listWidget->setFrameShape(QFrame::NoFrame);
+    m_listWidget->setVerticalScrollBarPolicy(Qt::ScrollBarAsNeeded);
+    m_listWidget->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
     layout->addWidget(m_listWidget, 1);
 
     // 点击跳转
