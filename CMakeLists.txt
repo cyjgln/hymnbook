@@ -45,11 +45,18 @@ if(CMAKE_CROSSCOMPILING)
 
     set(GENERATED_MOC_SOURCES ${MOC_CPP})
     set(GENERATED_RCC_SOURCE ${RCC_CPP})
+    set(QRC_SOURCE)
 else()
     set(CMAKE_AUTOMOC ON)
     set(CMAKE_AUTORCC ON)
     set(GENERATED_MOC_SOURCES)
     set(GENERATED_RCC_SOURCE)
+    set(QRC_SOURCE resources/resources.qrc)
+endif()
+
+# Windows .exe 图标
+if(WIN32)
+    set(APP_ICON resources/app.rc)
 endif()
 
 add_executable(${PROJECT_NAME}
@@ -71,6 +78,8 @@ add_executable(${PROJECT_NAME}
     src/ZoomableGraphicsView.h
     src/SearchDialog.h
     src/EditDialog.h
+    ${QRC_SOURCE}
+    ${APP_ICON}
     ${GENERATED_MOC_SOURCES}
     ${GENERATED_RCC_SOURCE}
 )

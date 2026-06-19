@@ -4,6 +4,7 @@
 
 
 #include <QApplication>
+#include <QIcon>
 #include "MainWindow.h"
 
 static const char *globalStyleSheet = R"(
@@ -135,6 +136,7 @@ int main(int argc, char *argv[])
     app.setApplicationVersion(QStringLiteral("1.1.0"));
 
     app.setStyleSheet(QString::fromUtf8(globalStyleSheet));
+    app.setWindowIcon(QIcon(QStringLiteral(":/app_icon.png")));
 
     MainWindow window;
     window.show();

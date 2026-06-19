@@ -8,6 +8,9 @@ SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 BUILD_DIR="${SCRIPT_DIR}/build_win"
 QT_WIN="/home/claw/Qt/6.2.4/mingw_64"
 NAME="HymnBookApp"
+# 从 main.cpp 读取版本号
+VERSION=$(grep 'setApplicationVersion' "${SCRIPT_DIR}/src/main.cpp" | grep -oP '"[^"]+"' | head -1 | tr -d '"')
+echo "Version: ${VERSION}"
 
 echo "=== Step 1/4: Configure CMake for Windows cross-compilation ==="
 rm -rf "${BUILD_DIR}"
@@ -106,7 +109,7 @@ fi
 
 echo ""
 echo "=== Step 4/4: Package green zip ==="
-ZIP_NAME="${NAME}-Windows-x86_64.zip"
+ZIP_NAME="${NAME}-${VERSION}-Windows-x86_64.zip"
 cd "${BUILD_DIR}/deploy"
 rm -f "${SCRIPT_DIR}/${ZIP_NAME}"
 zip -r "${SCRIPT_DIR}/${ZIP_NAME}" "${NAME}"

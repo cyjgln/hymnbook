@@ -128,7 +128,7 @@ void DirectoryPage::setupUI()
     m_listWidget = new QListWidget(this);
     m_listWidget->setViewMode(QListView::IconMode);
     m_listWidget->setIconSize(QSize(0, 0));
-    m_listWidget->setGridSize(QSize(370, 96));
+    m_listWidget->setGridSize(QSize(420, 100));
     m_listWidget->setSpacing(10);
     m_listWidget->setResizeMode(QListView::Adjust);
     m_listWidget->setWordWrap(true);
