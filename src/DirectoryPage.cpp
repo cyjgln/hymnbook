@@ -5,22 +5,6 @@
 
 #include "DirectoryPage.h"
 #include "HymnManager.h"
-
-#include <QVBoxLayout>
-#include <QHBoxLayout>
-#include <QListWidget>
-#include <QPushButton>
-#include <QLabel>
-#include <QFont>
-#include <QFileDialog>
-#include <QFileInfo>
-#include <QMessageBox>
-#include <QDir>
-#include <QDateTime>
-#include <QRegularExpression>
-
-#include "DirectoryPage.h"
-#include "HymnManager.h"
 #include "HymnDelegate.h"
 
 #include <QVBoxLayout>
@@ -70,24 +54,62 @@ void DirectoryPage::setupUI()
     // 按钮区域
     auto *buttonBar = new QHBoxLayout();
 
-    auto *addBtn = new QPushButton(QStringLiteral("＋ 新增歌谱"), this);
-    addBtn->setCursor(Qt::PointingHandCursor);
-    connect(addBtn, &QPushButton::clicked, this, &DirectoryPage::addHymnRequested);
-    buttonBar->addWidget(addBtn);
+    m_addBtn = new QPushButton(QStringLiteral("＋ 新增歌谱"), this);
+    m_addBtn->setCursor(Qt::PointingHandCursor);
+    connect(m_addBtn, &QPushButton::clicked, this, &DirectoryPage::addHymnRequested);
+    buttonBar->addWidget(m_addBtn);
 
-    auto *batchBtn = new QPushButton(QStringLiteral("批量导入"), this);
-    batchBtn->setObjectName(QStringLiteral("secondaryBtn"));
-    batchBtn->setCursor(Qt::PointingHandCursor);
-    connect(batchBtn, &QPushButton::clicked, this, &DirectoryPage::batchImport);
-    buttonBar->addWidget(batchBtn);
+    m_batchBtn = new QPushButton(QStringLiteral("批量导入"), this);
+    m_batchBtn->setObjectName(QStringLiteral("secondaryBtn"));
+    m_batchBtn->setCursor(Qt::PointingHandCursor);
+    connect(m_batchBtn, &QPushButton::clicked, this, &DirectoryPage::batchImport);
+    buttonBar->addWidget(m_batchBtn);
+
+    m_batchDeleteBtn = new QPushButton(QStringLiteral("🗑 批量删除"), this);
+    m_batchDeleteBtn->setObjectName(QStringLiteral("secondaryBtn"));
+    m_batchDeleteBtn->setCursor(Qt::PointingHandCursor);
+    connect(m_batchDeleteBtn, &QPushButton::clicked, this, &DirectoryPage::toggleSelectMode);
+    buttonBar->addWidget(m_batchDeleteBtn);
 
     buttonBar->addStretch();
 
-    auto *aboutBtn = new QPushButton(QStringLiteral("说明"), this);
-    aboutBtn->setObjectName(QStringLiteral("secondaryBtn"));
-    aboutBtn->setCursor(Qt::PointingHandCursor);
-    connect(aboutBtn, &QPushButton::clicked, this, &DirectoryPage::aboutRequested);
-    buttonBar->addWidget(aboutBtn);
+    // 选择模式按钮（初始隐藏）
+    m_selectAllBtn = new QPushButton(QStringLiteral("全选"), this);
+    m_selectAllBtn->setCursor(Qt::PointingHandCursor);
+    m_selectAllBtn->setVisible(false);
+    connect(m_selectAllBtn, &QPushButton::clicked, this, &DirectoryPage::selectAll);
+    buttonBar->addWidget(m_selectAllBtn);
+
+    m_invertSelectBtn = new QPushButton(QStringLiteral("反选"), this);
+    m_invertSelectBtn->setObjectName(QStringLiteral("secondaryBtn"));
+    m_invertSelectBtn->setCursor(Qt::PointingHandCursor);
+    m_invertSelectBtn->setVisible(false);
+    connect(m_invertSelectBtn, &QPushButton::clicked, this, &DirectoryPage::invertSelection);
+    buttonBar->addWidget(m_invertSelectBtn);
+
+    buttonBar->addStretch();
+
+    m_deleteSelectedBtn = new QPushButton(QStringLiteral("删除选中"), this);
+    m_deleteSelectedBtn->setCursor(Qt::PointingHandCursor);
+    m_deleteSelectedBtn->setObjectName(QStringLiteral("dangerBtn"));
+    m_deleteSelectedBtn->setVisible(false);
+    connect(m_deleteSelectedBtn, &QPushButton::clicked, this, &DirectoryPage::deleteSelected);
+    buttonBar->addWidget(m_deleteSelectedBtn);
+
+    m_cancelSelectBtn = new QPushButton(QStringLiteral("取消"), this);
+    m_cancelSelectBtn->setObjectName(QStringLiteral("secondaryBtn"));
+    m_cancelSelectBtn->setCursor(Qt::PointingHandCursor);
+    m_cancelSelectBtn->setVisible(false);
+    connect(m_cancelSelectBtn, &QPushButton::clicked, this, &DirectoryPage::toggleSelectMode);
+    buttonBar->addWidget(m_cancelSelectBtn);
+
+    // 原有说明按钮
+    m_aboutBtn = new QPushButton(QStringLiteral("说明"), this);
+    m_aboutBtn->setObjectName(QStringLiteral("secondaryBtn"));
+    m_aboutBtn->setCursor(Qt::PointingHandCursor);
+    connect(m_aboutBtn, &QPushButton::clicked, this, &DirectoryPage::aboutRequested);
+    buttonBar->addWidget(m_aboutBtn);
+
     layout->addLayout(buttonBar);
 
     // 分隔线
@@ -138,18 +160,21 @@ void DirectoryPage::setupUI()
     m_listWidget->setFrameShape(QFrame::NoFrame);
     m_listWidget->setVerticalScrollBarPolicy(Qt::ScrollBarAsNeeded);
     m_listWidget->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
-    // 自定义委托：可靠文字换行（跨平台）
-    m_listWidget->setItemDelegate(new HymnDelegate(this));
+
+    // 自定义委托
+    m_delegate = new HymnDelegate(this);
+    m_listWidget->setItemDelegate(m_delegate);
     containerLayout->addWidget(m_listWidget, 1);
 
     layout->addWidget(listContainer, 1);
 
     // 点击跳转
     connect(m_listWidget, &QListWidget::itemClicked, this, [this](QListWidgetItem *item) {
+        // 选择模式下，点击由 HymnDelegate::editorEvent 处理，不会走到这里
         int index = m_listWidget->row(item);
         QVariant data = item->data(Qt::UserRole);
         if (data.isValid()) {
-            emit hymnSelected(data.toInt());  // 传递 hymnIndex
+            emit hymnSelected(data.toInt());
         }
     });
 
@@ -158,6 +183,9 @@ void DirectoryPage::setupUI()
 
 void DirectoryPage::batchImport()
 {
+    // 选择模式下禁止批量导入
+    if (m_selectMode) return;
+
     // 打开文件多选对话框
     QStringList files = QFileDialog::getOpenFileNames(
         this,
@@ -231,6 +259,124 @@ void DirectoryPage::batchImport()
     QMessageBox::information(this, QStringLiteral("导入结果"), msg);
 }
 
+// ---- 批量删除 ----
+
+void DirectoryPage::toggleSelectMode()
+{
+    m_selectMode = !m_selectMode;
+
+    m_delegate->setSelectMode(m_selectMode);
+
+    // 进入选择模式时，清除所有已有选中状态
+    if (m_selectMode) {
+        for (int i = 0; i < m_listWidget->count(); ++i) {
+            m_listWidget->item(i)->setData(Qt::CheckStateRole, Qt::Unchecked);
+        }
+    }
+
+    // 切换按钮可见性
+    m_addBtn->setVisible(!m_selectMode);
+    m_batchBtn->setVisible(!m_selectMode);
+    m_batchDeleteBtn->setVisible(!m_selectMode);
+    m_aboutBtn->setVisible(!m_selectMode);
+
+    m_selectAllBtn->setVisible(m_selectMode);
+    m_invertSelectBtn->setVisible(m_selectMode);
+    m_deleteSelectedBtn->setVisible(m_selectMode);
+    m_cancelSelectBtn->setVisible(m_selectMode);
+
+    // 进入选择模式时禁用列表点击导航（editorEvent 已拦截点击，这里同时禁用选择高亮）
+    m_listWidget->setSelectionMode(m_selectMode
+        ? QAbstractItemView::NoSelection
+        : QAbstractItemView::SingleSelection);
+
+    updateDeleteButtonText();
+    m_listWidget->viewport()->update();
+}
+
+void DirectoryPage::selectAll()
+{
+    for (int i = 0; i < m_listWidget->count(); ++i) {
+        m_listWidget->item(i)->setData(Qt::CheckStateRole, Qt::Checked);
+    }
+    updateDeleteButtonText();
+    m_listWidget->viewport()->update();
+}
+
+void DirectoryPage::invertSelection()
+{
+    for (int i = 0; i < m_listWidget->count(); ++i) {
+        auto *item = m_listWidget->item(i);
+        Qt::CheckState state = static_cast<Qt::CheckState>(
+            item->data(Qt::CheckStateRole).toInt());
+        item->setData(Qt::CheckStateRole,
+                      (state == Qt::Checked) ? Qt::Unchecked : Qt::Checked);
+    }
+    updateDeleteButtonText();
+    m_listWidget->viewport()->update();
+}
+
+int DirectoryPage::selectedCount() const
+{
+    int count = 0;
+    for (int i = 0; i < m_listWidget->count(); ++i) {
+        if (m_listWidget->item(i)->data(Qt::CheckStateRole).toInt() == Qt::Checked)
+            ++count;
+    }
+    return count;
+}
+
+void DirectoryPage::updateDeleteButtonText()
+{
+    int n = selectedCount();
+    m_deleteSelectedBtn->setText(
+        n > 0
+            ? QStringLiteral("删除选中 (%1)").arg(n)
+            : QStringLiteral("删除选中"));
+}
+
+void DirectoryPage::deleteSelected()
+{
+    int n = selectedCount();
+    if (n == 0) {
+        QMessageBox::information(this, QStringLiteral("提示"),
+                                 QStringLiteral("请先勾选要删除的歌谱。"));
+        return;
+    }
+
+    // 确认对话框
+    auto result = QMessageBox::question(
+        this,
+        QStringLiteral("确认批量删除"),
+        QStringLiteral("确定要删除选中的 %1 首歌谱吗？\n此操作不可撤销。").arg(n),
+        QMessageBox::Yes | QMessageBox::No,
+        QMessageBox::No);
+
+    if (result != QMessageBox::Yes)
+        return;
+
+    // 收集选中歌谱的 ID
+    QList<int> ids;
+    QStringList titles;
+    for (int i = 0; i < m_listWidget->count(); ++i) {
+        auto *item = m_listWidget->item(i);
+        if (item->data(Qt::CheckStateRole).toInt() == Qt::Checked) {
+            int hymnIndex = item->data(Qt::UserRole).toInt();
+            Hymn h = HymnManager::instance().hymnByIndex(hymnIndex);
+            ids.append(h.id);
+            titles.append(h.title);
+        }
+    }
+
+    // 执行删除
+    HymnManager &mgr = HymnManager::instance();
+    mgr.deleteHymns(ids);
+    mgr.save();
+
+    // 退出选择模式
+    toggleSelectMode();
+}
+
 void DirectoryPage::refresh()
 {
     m_listWidget->clear();
@@ -249,6 +395,12 @@ void DirectoryPage::refresh()
                            .arg(h.title);
         auto *item = new QListWidgetItem(text);
         item->setData(Qt::UserRole, i);  // 存储列表索引
+        item->setData(Qt::CheckStateRole, Qt::Unchecked);  // 初始化未勾选
         m_listWidget->addItem(item);
+    }
+
+    // 如果处于选择模式，刷新后检查是否还有数据
+    if (m_selectMode && hymns.isEmpty()) {
+        toggleSelectMode();  // 自动退出选择模式
     }
 }

@@ -98,4 +98,3 @@ endif()
 
 # Copy data directory to build output
 file(COPY data DESTINATION ${CMAKE_BINARY_DIR})
-file(COPY images DESTINATION ${CMAKE_BINARY_DIR})

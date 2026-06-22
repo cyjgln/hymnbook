@@ -40,6 +40,8 @@ public:
     bool updateHymn(const Hymn &hymn);
     // 删除
     bool deleteHymn(int id);
+    // 批量删除（只发射一次 dataChanged）
+    void deleteHymns(const QList<int> &ids);
 
     // 数据文件路径
     QString dataFilePath() const { return m_filePath; }

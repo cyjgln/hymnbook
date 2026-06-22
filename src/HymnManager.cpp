@@ -157,6 +157,20 @@ bool HymnManager::deleteHymn(int id)
     return false;
 }
 
+void HymnManager::deleteHymns(const QList<int> &ids)
+{
+    QList<Hymn> remaining;
+    for (const Hymn &h : m_hymns) {
+        if (!ids.contains(h.id))
+            remaining.append(h);
+    }
+    if (remaining.size() == m_hymns.size())
+        return;  // 什么都没删
+    m_hymns = remaining;
+    regeneratePageNumbers();
+    emit dataChanged();
+}
+
 void HymnManager::regeneratePageNumbers()
 {
     for (int i = 0; i < m_hymns.size(); ++i) {

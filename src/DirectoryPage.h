@@ -11,6 +11,8 @@
 #include "Hymn.h"
 
 class QListWidget;
+class QPushButton;
+class HymnDelegate;
 
 class DirectoryPage : public QWidget
 {
@@ -32,8 +34,28 @@ private:
     void setupUI();
     void batchImport();
 
+    // 批量删除
+    void toggleSelectMode();
+    void selectAll();
+    void invertSelection();
+    void deleteSelected();
+    int selectedCount() const;
+    void updateDeleteButtonText();
+
     QListWidget *m_listWidget;
     QLabel *m_emptyLabel;
+    HymnDelegate *m_delegate = nullptr;
+
+    // 批量删除 UI
+    QPushButton *m_batchDeleteBtn = nullptr;
+    QPushButton *m_selectAllBtn = nullptr;
+    QPushButton *m_invertSelectBtn = nullptr;
+    QPushButton *m_deleteSelectedBtn = nullptr;
+    QPushButton *m_cancelSelectBtn = nullptr;
+    QPushButton *m_addBtn = nullptr;
+    QPushButton *m_batchBtn = nullptr;
+    QPushButton *m_aboutBtn = nullptr;
+    bool m_selectMode = false;
 };
 
 #endif // DIRECTORYPAGE_H

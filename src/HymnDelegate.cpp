@@ -1,11 +1,28 @@
+// Copyright (c) 2026 cyjgln. All rights reserved.
+// Use of this source code is governed by a MIT-style license that can be
+// found in the LICENSE file.
+
+
 #include "HymnDelegate.h"
 
 #include <QPainter>
 #include <QApplication>
+#include <QAbstractItemView>
+#include <QEvent>
 
 HymnDelegate::HymnDelegate(QObject *parent)
     : QStyledItemDelegate(parent)
 {
+}
+
+void HymnDelegate::setSelectMode(bool selectMode)
+{
+    m_selectMode = selectMode;
+}
+
+bool HymnDelegate::isSelectMode() const
+{
+    return m_selectMode;
 }
 
 void HymnDelegate::paint(QPainter *painter, const QStyleOptionViewItem &option,
@@ -45,6 +62,28 @@ void HymnDelegate::paint(QPainter *painter, const QStyleOptionViewItem &option,
         painter->drawRoundedRect(r.adjusted(0, 0, -r.width() + 4, 0), 8, 8);
     }
 
+    // --- 选择模式：复选框 ---
+    int checkboxOffset = 0;
+    if (m_selectMode) {
+        checkboxOffset = 32;
+        QRect cbRect(r.left() + 10, r.top() + (r.height() - 22) / 2, 22, 22);
+        bool checked = index.data(Qt::CheckStateRole).toInt() == Qt::Checked;
+
+        // 复选框外框
+        painter->setBrush(checked ? QColor(0xc9, 0xa9, 0x6e) : QColor(0xff, 0xff, 0xff));
+        painter->setPen(QPen(checked ? QColor(0xc9, 0xa9, 0x6e) : QColor(0xb8, 0xad, 0x9e), 1.5));
+        painter->drawRoundedRect(cbRect, 4, 4);
+
+        if (checked) {
+            // 勾选标记
+            painter->setPen(QPen(QColor(0xff, 0xff, 0xff), 2.5));
+            int cx = cbRect.center().x();
+            int cy = cbRect.center().y();
+            painter->drawLine(cx - 6, cy, cx - 2, cy + 5);
+            painter->drawLine(cx - 2, cy + 5, cx + 6, cy - 4);
+        }
+    }
+
     // --- 文字 ---
     QString text = index.data(Qt::DisplayRole).toString();
     if (text.isEmpty()) {
@@ -52,7 +91,7 @@ void HymnDelegate::paint(QPainter *painter, const QStyleOptionViewItem &option,
         return;
     }
 
-    QRect textRect = r.adjusted(14, 8, -14, -8);
+    QRect textRect = r.adjusted(14 + checkboxOffset, 8, -14, -8);
     QFont font = option.font;
     font.setPointSize(12);
     painter->setFont(font);
@@ -115,4 +154,20 @@ QSize HymnDelegate::sizeHint(const QStyleOptionViewItem &option,
     Q_UNUSED(index);
     // 在 IconMode 下 sizeHint 被 gridSize 覆盖，这里返回默认值
     return QSize(400, 90);
+}
+
+bool HymnDelegate::editorEvent(QEvent *event, QAbstractItemModel *model,
+                                const QStyleOptionViewItem &option,
+                                const QModelIndex &index)
+{
+    // 选择模式下消耗鼠标点击，切换复选框状态，阻止导航
+    if (m_selectMode && event->type() == QEvent::MouseButtonRelease) {
+        Qt::CheckState state = static_cast<Qt::CheckState>(
+            index.data(Qt::CheckStateRole).toInt());
+        state = (state == Qt::Checked) ? Qt::Unchecked : Qt::Checked;
+        model->setData(index, static_cast<int>(state), Qt::CheckStateRole);
+        return true;
+    }
+
+    return QStyledItemDelegate::editorEvent(event, model, option, index);
 }
