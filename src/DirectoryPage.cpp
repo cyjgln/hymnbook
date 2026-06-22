@@ -170,7 +170,9 @@ void DirectoryPage::setupUI()
 
     // 点击跳转
     connect(m_listWidget, &QListWidget::itemClicked, this, [this](QListWidgetItem *item) {
-        // 选择模式下，点击由 HymnDelegate::editorEvent 处理，不会走到这里
+        // 选择模式下不触发导航（复选框由 HymnDelegate::editorEvent 处理）
+        if (m_selectMode)
+            return;
         int index = m_listWidget->row(item);
         QVariant data = item->data(Qt::UserRole);
         if (data.isValid()) {
