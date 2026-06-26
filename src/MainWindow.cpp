@@ -7,6 +7,7 @@
 #include "DirectoryPage.h"
 #include "HymnViewerPage.h"
 #include "AboutPage.h"
+#include "SettingsPage.h"
 #include "HymnManager.h"
 #include "SearchDialog.h"
 #include "EditDialog.h"
@@ -99,10 +100,12 @@ void MainWindow::setupUI()
     m_directoryPage = new DirectoryPage(this);
     m_hymnViewerPage = new HymnViewerPage(this);
     m_aboutPage = new AboutPage(this);
+    m_settingsPage = new SettingsPage(this);
 
     m_stackedWidget->addWidget(m_directoryPage);   // index 0
     m_stackedWidget->addWidget(m_hymnViewerPage);  // index 1
     m_stackedWidget->addWidget(m_aboutPage);       // index 2
+    m_stackedWidget->addWidget(m_settingsPage);    // index 3
 
     setCentralWidget(m_stackedWidget);
 
@@ -118,6 +121,10 @@ void MainWindow::setupUI()
     // 目录页 → 说明页
     connect(m_directoryPage, &DirectoryPage::aboutRequested,
             this, &MainWindow::switchToAbout);
+
+    // 目录页 → 设置页
+    connect(m_directoryPage, &DirectoryPage::settingsRequested,
+            this, &MainWindow::switchToSettings);
 
     // 歌谱页 → 返回目录
     connect(m_hymnViewerPage, &HymnViewerPage::directoryRequested,
@@ -147,6 +154,14 @@ void MainWindow::setupUI()
     // 说明页 → 返回目录
     connect(m_aboutPage, &AboutPage::directoryRequested,
             this, &MainWindow::switchToDirectory);
+
+    // 设置页 → 返回目录
+    connect(m_settingsPage, &SettingsPage::directoryRequested,
+            this, &MainWindow::switchToDirectory);
+
+    // 显示模式变更 → 如果当前在歌谱页则即时刷新
+    connect(m_settingsPage, &SettingsPage::displayModeChanged,
+            m_hymnViewerPage, &HymnViewerPage::applyDisplayMode);
 
     // 歌谱页 → 搜索
     connect(m_hymnViewerPage, &HymnViewerPage::searchRequested,
@@ -231,6 +246,11 @@ void MainWindow::switchToHymnViewer(int hymnIndex)
 void MainWindow::switchToAbout()
 {
     switchToPage(AboutPageIndex);
+}
+
+void MainWindow::switchToSettings()
+{
+    switchToPage(SettingsPageIndex);
 }
 
 void MainWindow::showSearchDialog()

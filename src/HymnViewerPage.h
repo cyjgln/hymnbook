@@ -36,8 +36,12 @@ public slots:
     void zoomIn();
     void zoomOut();
 
+public slots:
+    void applyDisplayMode();
+
 protected:
     void keyPressEvent(QKeyEvent *event) override;
+    void resizeEvent(QResizeEvent *event) override;
 
 private:
     void setupUI();

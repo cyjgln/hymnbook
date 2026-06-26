@@ -29,6 +29,7 @@ signals:
     void hymnSelected(int hymnIndex);
     void aboutRequested();
     void addHymnRequested();
+    void settingsRequested();
 
 private:
     void setupUI();
@@ -54,6 +55,7 @@ private:
     QPushButton *m_cancelSelectBtn = nullptr;
     QPushButton *m_addBtn = nullptr;
     QPushButton *m_batchBtn = nullptr;
+    QPushButton *m_settingsBtn = nullptr;
     QPushButton *m_aboutBtn = nullptr;
     bool m_selectMode = false;
 };

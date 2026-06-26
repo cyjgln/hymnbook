@@ -19,6 +19,8 @@
 #include <QGraphicsPixmapItem>
 #include <QFileInfo>
 #include <QDir>
+#include <QSettings>
+#include <QResizeEvent>
 #include <cmath>
 
 HymnViewerPage::HymnViewerPage(QWidget *parent)
@@ -154,7 +156,7 @@ void HymnViewerPage::loadHymn(int index)
             auto *item = m_scene->addPixmap(pixmap);
             // 明确设置场景矩形为图片实际尺寸，确保 fitInView 能正确计算缩放比
             m_scene->setSceneRect(item->boundingRect());
-            m_graphicsView->zoomReset();
+            applyDisplayMode();
             return;
         }
     }
@@ -175,6 +177,32 @@ void HymnViewerPage::zoomIn()
 void HymnViewerPage::zoomOut()
 {
     m_graphicsView->zoomOut();
+}
+
+void HymnViewerPage::resizeEvent(QResizeEvent *event)
+{
+    QWidget::resizeEvent(event);
+    applyDisplayMode();
+}
+
+void HymnViewerPage::applyDisplayMode()
+{
+    if (m_scene->items().isEmpty())
+        return;
+
+    QSettings settings;
+    int mode = settings.value(QStringLiteral("display/mode"), 0).toInt();
+    switch (mode) {
+    case 1:
+        m_graphicsView->zoomFitToWidth();
+        break;
+    case 2:
+        m_graphicsView->zoomFitToHeight();
+        break;
+    default:
+        m_graphicsView->zoomReset();  // 全页显示
+        break;
+    }
 }
 
 void HymnViewerPage::keyPressEvent(QKeyEvent *event)

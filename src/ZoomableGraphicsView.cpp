@@ -61,6 +61,42 @@ void ZoomableGraphicsView::wheelEvent(QWheelEvent *event)
     event->accept();
 }
 
+void ZoomableGraphicsView::zoomFitToWidth()
+{
+    m_zoomFactor = 1.0;
+    resetTransform();
+    QRectF r = sceneRect();
+    if (r.isEmpty() || viewport()->width() == 0)
+        return;
+    double margin = 12;
+    double factor = (viewport()->width() - 2 * margin) / r.width();
+    factor = std::clamp(factor, m_minZoom, m_maxZoom);
+    m_zoomFactor = factor;
+    QGraphicsView::scale(factor, factor);
+    centerOn(r.center());
+    emit zoomChanged(m_zoomFactor);
+}
+
+void ZoomableGraphicsView::zoomFitToHeight()
+{
+    m_zoomFactor = 1.0;
+    resetTransform();
+    QRectF r = sceneRect();
+    if (r.isEmpty() || viewport()->height() == 0)
+        return;
+    double margin = 12;
+    double scaleH = (viewport()->height() - 2 * margin) / r.height();
+    double scaleW = (viewport()->width() - 2 * margin) / r.width();
+    double factor = scaleH;  // 优先撑高
+    if (r.width() * factor > viewport()->width() - 2 * margin)
+        factor = scaleW;     // 宽度不能超出
+    factor = std::clamp(factor, m_minZoom, m_maxZoom);
+    m_zoomFactor = factor;
+    QGraphicsView::scale(factor, factor);
+    centerOn(r.center());
+    emit zoomChanged(m_zoomFactor);
+}
+
 void ZoomableGraphicsView::applyZoom(double newFactor)
 {
     // 限制缩放范围

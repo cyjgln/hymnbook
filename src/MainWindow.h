@@ -12,6 +12,7 @@ class QStackedWidget;
 class DirectoryPage;
 class HymnViewerPage;
 class AboutPage;
+class SettingsPage;
 class SearchDialog;
 
 class MainWindow : public QMainWindow
@@ -25,13 +26,15 @@ public:
     enum Page {
         DirectoryPageIndex = 0,
         HymnViewerPageIndex,
-        AboutPageIndex
+        AboutPageIndex,
+        SettingsPageIndex
     };
 
     void switchToPage(Page page);
     void switchToDirectory();
     void switchToHymnViewer(int hymnIndex);
     void switchToAbout();
+    void switchToSettings();
     void showSearchDialog();
 
 private:
@@ -43,6 +46,7 @@ private:
     DirectoryPage *m_directoryPage;
     HymnViewerPage *m_hymnViewerPage;
     AboutPage *m_aboutPage;
+    SettingsPage *m_settingsPage;
     SearchDialog *m_searchDialog;
 };
 

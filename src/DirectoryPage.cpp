@@ -103,7 +103,14 @@ void DirectoryPage::setupUI()
     connect(m_cancelSelectBtn, &QPushButton::clicked, this, &DirectoryPage::toggleSelectMode);
     buttonBar->addWidget(m_cancelSelectBtn);
 
-    // 原有说明按钮
+    // 设置按钮
+    m_settingsBtn = new QPushButton(QStringLiteral("设置"), this);
+    m_settingsBtn->setObjectName(QStringLiteral("secondaryBtn"));
+    m_settingsBtn->setCursor(Qt::PointingHandCursor);
+    connect(m_settingsBtn, &QPushButton::clicked, this, &DirectoryPage::settingsRequested);
+    buttonBar->addWidget(m_settingsBtn);
+
+    // 说明按钮
     m_aboutBtn = new QPushButton(QStringLiteral("说明"), this);
     m_aboutBtn->setObjectName(QStringLiteral("secondaryBtn"));
     m_aboutBtn->setCursor(Qt::PointingHandCursor);
@@ -280,6 +287,7 @@ void DirectoryPage::toggleSelectMode()
     m_addBtn->setVisible(!m_selectMode);
     m_batchBtn->setVisible(!m_selectMode);
     m_batchDeleteBtn->setVisible(!m_selectMode);
+    m_settingsBtn->setVisible(!m_selectMode);
     m_aboutBtn->setVisible(!m_selectMode);
 
     m_selectAllBtn->setVisible(m_selectMode);

@@ -15,7 +15,7 @@ if(CMAKE_CROSSCOMPILING)
 
     # 为每个含 Q_OBJECT 的头文件生成 moc_xxx.cpp
     set(MOC_HEADERS
-        MainWindow.h DirectoryPage.h HymnViewerPage.h AboutPage.h
+        MainWindow.h DirectoryPage.h HymnViewerPage.h AboutPage.h SettingsPage.h
         HymnManager.h ZoomableGraphicsView.h SearchDialog.h EditDialog.h HymnDelegate.h
     )
     set(MOC_CPP)
@@ -64,6 +64,7 @@ add_executable(${PROJECT_NAME}
     src/DirectoryPage.cpp
     src/HymnViewerPage.cpp
     src/AboutPage.cpp
+    src/SettingsPage.cpp
     src/HymnManager.cpp
     src/ZoomableGraphicsView.cpp
     src/SearchDialog.cpp
@@ -73,6 +74,7 @@ add_executable(${PROJECT_NAME}
     src/DirectoryPage.h
     src/HymnViewerPage.h
     src/AboutPage.h
+    src/SettingsPage.h
     src/Hymn.h
     src/HymnManager.h
     src/ZoomableGraphicsView.h

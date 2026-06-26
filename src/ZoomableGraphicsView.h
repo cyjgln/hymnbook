@@ -24,6 +24,8 @@ public slots:
     void zoomIn();
     void zoomOut();
     void zoomReset();
+    void zoomFitToWidth();
+    void zoomFitToHeight();
 
 signals:
     void zoomChanged(double factor);
