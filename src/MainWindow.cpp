@@ -34,11 +34,16 @@ MainWindow::MainWindow(QWidget *parent)
 
 void MainWindow::initData()
 {
-    // 持久化数据路径：用户应用数据目录（Linux ~/.local/share/HymnBook/HymnBookApp/）
-    QString appDataDir = QStandardPaths::writableLocation(QStandardPaths::AppDataLocation);
-    QString primaryPath = appDataDir + QStringLiteral("/data/hymns.json");
+    // 主数据路径：应用程序所在目录（教会整体拷贝目录即可携带所有数据）
+    // 目录结构： hymnbook_app/
+    //             ├── HymnBookApp.exe
+    //             ├── data/hymns.json
+    //             ├── images/xxx.png
+    //             └── ...
+    QString appDir = QCoreApplication::applicationDirPath();
+    QString primaryPath = appDir + QStringLiteral("/data/hymns.json");
 
-    // Priority 1: 持久化路径已存在 → 直接加载
+    // Priority 1: 主路径已存在 → 直接加载
     if (QFile::exists(primaryPath)) {
         if (HymnManager::instance().load(primaryPath)) {
             qDebug() << "数据加载成功:" << primaryPath;
@@ -46,9 +51,32 @@ void MainWindow::initData()
         }
     }
 
-    // Priority 2: 从旧位置（编译目录等）迁移到持久化路径
+    // Priority 2: 从旧路径（AppDataLocation）迁移到主路径
+    QString appDataDir = QStandardPaths::writableLocation(QStandardPaths::AppDataLocation);
+    QString oldPath = appDataDir + QStringLiteral("/data/hymns.json");
+    if (oldPath != primaryPath && QFile::exists(oldPath)) {
+        QDir().mkpath(appDir + QStringLiteral("/data"));
+        if (QFile::copy(oldPath, primaryPath)) {
+            // 迁移 images 目录
+            QString oldImages = appDataDir + QStringLiteral("/images");
+            QString newImages = appDir + QStringLiteral("/images");
+            if (QDir(oldImages).exists()) {
+                QDir().mkpath(newImages);
+                for (const QFileInfo &fi :
+                     QDir(oldImages).entryInfoList(QDir::Files | QDir::NoDotAndDotDot)) {
+                    QFile::copy(fi.absoluteFilePath(),
+                                newImages + QStringLiteral("/") + fi.fileName());
+                }
+            }
+            if (HymnManager::instance().load(primaryPath)) {
+                qDebug() << "旧数据已从 AppData 迁移:" << oldPath << "→" << primaryPath;
+                return;
+            }
+        }
+    }
+
+    // Priority 3: 从其他遗留路径迁移
     QStringList legacyPaths = {
-        QCoreApplication::applicationDirPath() + QStringLiteral("/data/hymns.json"),
         QDir::currentPath() + QStringLiteral("/data/hymns.json"),
     };
 
@@ -56,13 +84,11 @@ void MainWindow::initData()
         if (legacyPath == primaryPath) continue;
         if (!QFile::exists(legacyPath)) continue;
 
-        // 迁移数据文件
-        QDir().mkpath(appDataDir + QStringLiteral("/data"));
+        QDir().mkpath(appDir + QStringLiteral("/data"));
         if (QFile::copy(legacyPath, primaryPath)) {
-            // 迁移 images 目录
             QString legacyImages = QFileInfo(legacyPath).absolutePath()
                                    + QStringLiteral("/../images");
-            QString newImages = appDataDir + QStringLiteral("/images");
+            QString newImages = appDir + QStringLiteral("/images");
             if (QDir(legacyImages).exists()) {
                 QDir().mkpath(newImages);
                 for (const QFileInfo &fi :
@@ -71,8 +97,6 @@ void MainWindow::initData()
                                 newImages + QStringLiteral("/") + fi.fileName());
                 }
             }
-
-            // 从新位置加载（m_filePath 指向持久化路径）
             if (HymnManager::instance().load(primaryPath)) {
                 qDebug() << "旧数据已迁移:" << legacyPath << "→" << primaryPath;
                 return;
@@ -80,10 +104,10 @@ void MainWindow::initData()
         }
     }
 
-    // Priority 3: 真正没有数据 → 在持久化路径创建空数据文件
-    qWarning() << "未找到 hymns.json，将在 AppDataLocation 创建空数据";
-    QDir().mkpath(appDataDir + QStringLiteral("/data"));
-    QDir().mkpath(appDataDir + QStringLiteral("/images"));
+    // Priority 4: 真正没有数据 → 在主路径创建空数据文件
+    qWarning() << "未找到 hymns.json，将在 exe 目录创建空数据";
+    QDir().mkpath(appDir + QStringLiteral("/data"));
+    QDir().mkpath(appDir + QStringLiteral("/images"));
 
     HymnManager::instance().load(primaryPath);
     HymnManager::instance().save();  // 写入空数组 []
