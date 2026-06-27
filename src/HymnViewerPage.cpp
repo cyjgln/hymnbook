@@ -78,6 +78,14 @@ void HymnViewerPage::setupUI()
 
     toolbar->addSeparator();
 
+    // 最大化（横向铺满）
+    auto *maximizeBtn = new QPushButton(QStringLiteral("最大化"), this);
+    maximizeBtn->setCursor(Qt::PointingHandCursor);
+    connect(maximizeBtn, &QPushButton::clicked, this, [this]() {
+        m_graphicsView->zoomFitToWidth();
+    });
+    toolbar->addWidget(maximizeBtn);
+
     // 缩放按钮
     auto *zoomInBtn = new QPushButton(QStringLiteral("放大"), this);
     connect(zoomInBtn, &QPushButton::clicked, this, &HymnViewerPage::zoomIn);
