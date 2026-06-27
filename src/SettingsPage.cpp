@@ -12,6 +12,7 @@
 #include <QGroupBox>
 #include <QRadioButton>
 #include <QButtonGroup>
+#include <QCheckBox>
 #include <QSettings>
 
 SettingsPage::SettingsPage(QWidget *parent)
@@ -88,21 +89,51 @@ void SettingsPage::setupUI()
     descWidth->setWordWrap(true);
     groupLayout->addWidget(descWidth);
 
-    // 纵向最大化
-    auto *radioHeight = new QRadioButton(QStringLiteral("纵向最大化"), this);
-    m_displayButtonGroup->addButton(radioHeight, 2);
-    groupLayout->addWidget(radioHeight);
-    auto *descHeight = new QLabel(QStringLiteral("图片纵向铺满窗口，适合横版歌谱，宽度不超出视口"), this);
-    descHeight->setStyleSheet(QStringLiteral("color: #8a7a6a; font-size: 12px; font-weight: normal; padding-left: 24px;"));
-    descHeight->setWordWrap(true);
-    groupLayout->addWidget(descHeight);
-
     layout->addWidget(m_displayGroup);
+    layout->addSpacing(8);
+
+    // ---- 自动滚动分组 ----
+    auto *scrollGroup = new QGroupBox(QStringLiteral("自动滚动"), this);
+    scrollGroup->setStyleSheet(QStringLiteral(
+        "QGroupBox {"
+        "  font-size: 16px;"
+        "  font-weight: bold;"
+        "  color: #5a4a3a;"
+        "  border: 1px solid #e0d5c8;"
+        "  border-radius: 8px;"
+        "  margin-top: 16px;"
+        "  padding: 20px 16px 16px 16px;"
+        "}"
+        "QGroupBox::title {"
+        "  subcontrol-origin: margin;"
+        "  left: 16px;"
+        "  padding: 0 8px;"
+        "}"
+    ));
+
+    auto *scrollLayout = new QVBoxLayout(scrollGroup);
+    m_autoScrollCheck = new QCheckBox(QStringLiteral("进入歌谱时自动开始滚动"), this);
+    m_autoScrollCheck->setStyleSheet(QStringLiteral(
+        "QCheckBox { font-size: 14px; font-weight: normal; color: #5a4a3a; }"
+    ));
+    scrollLayout->addWidget(m_autoScrollCheck);
+    auto *scrollDesc = new QLabel(QStringLiteral("启用后，查看歌谱时图片会自动从顶部滚动到底部，速度可在歌谱页工具栏调整"), this);
+    scrollDesc->setStyleSheet(QStringLiteral("color: #8a7a6a; font-size: 12px; font-weight: normal; padding-left: 24px;"));
+    scrollDesc->setWordWrap(true);
+    scrollLayout->addWidget(scrollDesc);
+
+    layout->addWidget(scrollGroup);
     layout->addStretch(1);
 
     // 监听单选按钮变化
     connect(m_displayButtonGroup, &QButtonGroup::idClicked,
             this, &SettingsPage::onDisplayModeChanged);
+
+    // 监听自动滚动选项变化
+    connect(m_autoScrollCheck, &QCheckBox::toggled, this, [](bool checked) {
+        QSettings settings;
+        settings.setValue(QStringLiteral("display/autoScroll"), checked);
+    });
 }
 
 void SettingsPage::loadSettings()
@@ -112,6 +143,9 @@ void SettingsPage::loadSettings()
     auto *btn = m_displayButtonGroup->button(mode);
     if (btn)
         btn->setChecked(true);
+
+    bool autoScroll = settings.value(QStringLiteral("display/autoScroll"), false).toBool();
+    m_autoScrollCheck->setChecked(autoScroll);
 }
 
 void SettingsPage::onDisplayModeChanged(int modeId)

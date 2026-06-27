@@ -9,6 +9,7 @@
 #include <QWidget>
 
 class QButtonGroup;
+class QCheckBox;
 class QGroupBox;
 
 class SettingsPage : public QWidget
@@ -30,6 +31,7 @@ private:
 
     QGroupBox *m_displayGroup = nullptr;
     QButtonGroup *m_displayButtonGroup = nullptr;
+    QCheckBox *m_autoScrollCheck = nullptr;
 };
 
 #endif // SETTINGSPAGE_H

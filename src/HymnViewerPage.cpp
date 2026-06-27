@@ -21,12 +21,21 @@
 #include <QDir>
 #include <QSettings>
 #include <QResizeEvent>
+#include <QTimer>
+#include <QComboBox>
+#include <QScrollBar>
+#include <QMouseEvent>
 #include <cmath>
 
 HymnViewerPage::HymnViewerPage(QWidget *parent)
     : QWidget(parent), m_currentIndex(0)
 {
     setFocusPolicy(Qt::StrongFocus);
+
+    m_autoScrollTimer = new QTimer(this);
+    m_autoScrollTimer->setInterval(50);  // 20 fps
+    connect(m_autoScrollTimer, &QTimer::timeout, this, &HymnViewerPage::onAutoScrollTick);
+
     setupUI();
 }
 
@@ -83,12 +92,48 @@ void HymnViewerPage::setupUI()
     m_zoomLabel->setAlignment(Qt::AlignCenter);
     toolbar->addWidget(m_zoomLabel);
 
+    toolbar->addSeparator();
+
+    // 自动滚动按钮
+    m_autoScrollBtn = new QPushButton(QStringLiteral("▶ 自动滚动"), this);
+    m_autoScrollBtn->setCheckable(true);
+    m_autoScrollBtn->setCursor(Qt::PointingHandCursor);
+    connect(m_autoScrollBtn, &QPushButton::clicked, this, [this]() {
+        if (m_autoScrollActive) {
+            stopAutoScroll();
+        } else {
+            startAutoScroll();
+        }
+    });
+    toolbar->addWidget(m_autoScrollBtn);
+
+    // 滚动速度选择
+    auto *speedLabel = new QLabel(QStringLiteral("速度:"), this);
+    toolbar->addWidget(speedLabel);
+
+    m_autoScrollSpeedCombo = new QComboBox(this);
+    m_autoScrollSpeedCombo->addItems({
+        QStringLiteral("1"),
+        QStringLiteral("2"),
+        QStringLiteral("3"),
+        QStringLiteral("4"),
+        QStringLiteral("5"),
+    });
+    m_autoScrollSpeedCombo->setCurrentIndex(m_autoScrollSpeed - 1);
+    m_autoScrollSpeedCombo->setFixedWidth(60);
+    connect(m_autoScrollSpeedCombo, &QComboBox::currentIndexChanged, this, [this](int idx) {
+        m_autoScrollSpeed = idx + 1;
+        recalcAutoScrollSpeed();
+    });
+    toolbar->addWidget(m_autoScrollSpeedCombo);
+
     layout->addWidget(toolbar);
 
     // 图片显示区域
     m_scene = new QGraphicsScene(this);
     m_graphicsView = new ZoomableGraphicsView(this);
     m_graphicsView->setScene(m_scene);
+    m_graphicsView->viewport()->installEventFilter(this);
     layout->addWidget(m_graphicsView, 1);
 
     // 监听缩放变化，更新显示
@@ -128,6 +173,10 @@ void HymnViewerPage::setupUI()
 
 void HymnViewerPage::loadHymn(int index)
 {
+    // 切换歌谱时停止自动滚动
+    if (m_autoScrollActive)
+        stopAutoScroll();
+
     m_currentIndex = index;
     int total = HymnManager::instance().count();
 
@@ -157,6 +206,7 @@ void HymnViewerPage::loadHymn(int index)
             // 明确设置场景矩形为图片实际尺寸，确保 fitInView 能正确计算缩放比
             m_scene->setSceneRect(item->boundingRect());
             applyDisplayMode();
+            checkAutoScrollStart();
             return;
         }
     }
@@ -196,13 +246,118 @@ void HymnViewerPage::applyDisplayMode()
     case 1:
         m_graphicsView->zoomFitToWidth();
         break;
-    case 2:
-        m_graphicsView->zoomFitToHeight();
-        break;
     default:
         m_graphicsView->zoomReset();  // 全页显示
         break;
     }
+}
+
+void HymnViewerPage::recalcAutoScrollSpeed()
+{
+    QScrollBar *vbar = m_graphicsView->verticalScrollBar();
+    if (!vbar || vbar->maximum() <= 0) {
+        m_autoScrollPixelsPerTick = 0;
+        return;
+    }
+
+    int totalScroll = vbar->maximum();
+    const double durations[] = {60.0, 40.0, 30.0, 20.0, 12.0};
+    double duration = durations[m_autoScrollSpeed - 1];
+    int ticks = static_cast<int>(duration * 20);  // 20 ticks/s @ 50ms
+    m_autoScrollPixelsPerTick = std::max(1, totalScroll / ticks);
+}
+
+void HymnViewerPage::startAutoScroll()
+{
+    if (m_autoScrollActive)
+        return;
+
+    QScrollBar *vbar = m_graphicsView->verticalScrollBar();
+    if (!vbar || vbar->maximum() <= 0)
+        return;  // 无需滚动
+
+    m_autoScrollActive = true;
+    m_autoScrollPaused = false;
+    m_autoScrollBtn->setText(QStringLiteral("⏸ 停止滚动"));
+    m_autoScrollBtn->setChecked(true);
+
+    // 回到顶部开始滚动
+    vbar->setValue(0);
+    recalcAutoScrollSpeed();
+    m_autoScrollTimer->start();
+}
+
+void HymnViewerPage::stopAutoScroll()
+{
+    if (!m_autoScrollActive)
+        return;
+
+    m_autoScrollActive = false;
+    m_autoScrollPaused = false;
+    m_autoScrollTimer->stop();
+    m_autoScrollBtn->setText(QStringLiteral("▶ 自动滚动"));
+    m_autoScrollBtn->setChecked(false);
+}
+
+void HymnViewerPage::pauseAutoScroll()
+{
+    if (!m_autoScrollActive || m_autoScrollPaused)
+        return;
+
+    m_autoScrollPaused = true;
+    m_autoScrollTimer->stop();
+}
+
+void HymnViewerPage::resumeAutoScroll()
+{
+    if (!m_autoScrollActive || !m_autoScrollPaused)
+        return;
+
+    m_autoScrollPaused = false;
+    recalcAutoScrollSpeed();
+    m_autoScrollTimer->start();
+}
+
+void HymnViewerPage::onAutoScrollTick()
+{
+    QScrollBar *vbar = m_graphicsView->verticalScrollBar();
+    if (!vbar || vbar->maximum() <= 0) {
+        stopAutoScroll();
+        return;
+    }
+
+    int newVal = vbar->value() + m_autoScrollPixelsPerTick;
+    if (newVal >= vbar->maximum()) {
+        vbar->setValue(vbar->maximum());
+        stopAutoScroll();  // 滚动到底部，结束
+    } else {
+        vbar->setValue(newVal);
+    }
+}
+
+void HymnViewerPage::checkAutoScrollStart()
+{
+    QSettings settings;
+    bool autoScrollEnabled = settings.value(QStringLiteral("display/autoScroll"), false).toBool();
+    if (autoScrollEnabled) {
+        startAutoScroll();
+    }
+}
+
+bool HymnViewerPage::eventFilter(QObject *obj, QEvent *event)
+{
+    if (obj == m_graphicsView->viewport()) {
+        if (event->type() == QEvent::MouseButtonPress) {
+            // 用户手动操作 → 暂停自动滚动
+            if (m_autoScrollActive && !m_autoScrollPaused)
+                pauseAutoScroll();
+        } else if (event->type() == QEvent::MouseButtonRelease) {
+            // 用户停止操作 → 恢复自动滚动
+            if (m_autoScrollActive && m_autoScrollPaused)
+                resumeAutoScroll();
+        }
+    }
+    return QWidget::eventFilter(obj, event);
 }
 
 void HymnViewerPage::keyPressEvent(QKeyEvent *event)

@@ -13,6 +13,9 @@ class ZoomableGraphicsView;
 class QGraphicsScene;
 class QKeyEvent;
 class QLabel;
+class QPushButton;
+class QTimer;
+class QComboBox;
 
 class HymnViewerPage : public QWidget
 {
@@ -38,20 +41,35 @@ public slots:
 
 public slots:
     void applyDisplayMode();
+    void startAutoScroll();
+    void stopAutoScroll();
 
 protected:
     void keyPressEvent(QKeyEvent *event) override;
     void resizeEvent(QResizeEvent *event) override;
+    bool eventFilter(QObject *obj, QEvent *event) override;
 
 private:
     void setupUI();
+    void pauseAutoScroll();
+    void resumeAutoScroll();
+    void onAutoScrollTick();
+    void recalcAutoScrollSpeed();
+    void checkAutoScrollStart();
 
     ZoomableGraphicsView *m_graphicsView;
     QGraphicsScene *m_scene;
     QLabel *m_titleLabel;
     QLabel *m_pageLabel;
     QLabel *m_zoomLabel;
+    QTimer *m_autoScrollTimer = nullptr;
+    QPushButton *m_autoScrollBtn = nullptr;
+    QComboBox *m_autoScrollSpeedCombo = nullptr;
     int m_currentIndex;
+    int m_autoScrollSpeed = 3;
+    int m_autoScrollPixelsPerTick = 0;
+    bool m_autoScrollActive = false;
+    bool m_autoScrollPaused = false;
 };
 
 #endif // HYMNVIEWERPAGE_H
