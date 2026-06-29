@@ -22,7 +22,6 @@
 #include <QSettings>
 #include <QResizeEvent>
 #include <QTimer>
-#include <QComboBox>
 #include <QScrollBar>
 #include <QMouseEvent>
 #include <cmath>
@@ -115,25 +114,43 @@ void HymnViewerPage::setupUI()
     });
     toolbar->addWidget(m_autoScrollBtn);
 
-    // 滚动速度选择
-    auto *speedLabel = new QLabel(QStringLiteral("速度:"), this);
-    toolbar->addWidget(speedLabel);
+    // 滚动速度调节（上下箭头按钮）
+    auto *speedLabelTitle = new QLabel(QStringLiteral("速度:"), this);
+    toolbar->addWidget(speedLabelTitle);
 
-    m_autoScrollSpeedCombo = new QComboBox(this);
-    m_autoScrollSpeedCombo->addItems({
-        QStringLiteral("1"),
-        QStringLiteral("2"),
-        QStringLiteral("3"),
-        QStringLiteral("4"),
-        QStringLiteral("5"),
+    m_speedDownBtn = new QPushButton(QStringLiteral("▼"), this);
+    m_speedDownBtn->setFixedWidth(32);
+    m_speedDownBtn->setCursor(Qt::PointingHandCursor);
+    m_speedDownBtn->setToolTip(QStringLiteral("降低滚动速度 (Ctrl+↓)"));
+    connect(m_speedDownBtn, &QPushButton::clicked, this, [this]() {
+        if (m_autoScrollSpeed > 1) {
+            m_autoScrollSpeed--;
+            updateSpeedDisplay();
+            if (m_autoScrollActive && !m_autoScrollPaused)
+                recalcAutoScrollSpeed();
+        }
     });
-    m_autoScrollSpeedCombo->setCurrentIndex(m_autoScrollSpeed - 1);
-    m_autoScrollSpeedCombo->setFixedWidth(60);
-    connect(m_autoScrollSpeedCombo, &QComboBox::currentIndexChanged, this, [this](int idx) {
-        m_autoScrollSpeed = idx + 1;
-        recalcAutoScrollSpeed();
+    toolbar->addWidget(m_speedDownBtn);
+
+    m_speedLabel = new QLabel(QString::number(m_autoScrollSpeed), this);
+    m_speedLabel->setMinimumWidth(20);
+    m_speedLabel->setAlignment(Qt::AlignCenter);
+    m_speedLabel->setStyleSheet(QStringLiteral("font-weight: bold; font-size: 14px;"));
+    toolbar->addWidget(m_speedLabel);
+
+    m_speedUpBtn = new QPushButton(QStringLiteral("▲"), this);
+    m_speedUpBtn->setFixedWidth(32);
+    m_speedUpBtn->setCursor(Qt::PointingHandCursor);
+    m_speedUpBtn->setToolTip(QStringLiteral("增加滚动速度 (Ctrl+↑)"));
+    connect(m_speedUpBtn, &QPushButton::clicked, this, [this]() {
+        if (m_autoScrollSpeed < 5) {
+            m_autoScrollSpeed++;
+            updateSpeedDisplay();
+            if (m_autoScrollActive && !m_autoScrollPaused)
+                recalcAutoScrollSpeed();
+        }
     });
-    toolbar->addWidget(m_autoScrollSpeedCombo);
+    toolbar->addWidget(m_speedUpBtn);
 
     layout->addWidget(toolbar);
 
@@ -249,7 +266,7 @@ void HymnViewerPage::applyDisplayMode()
         return;
 
     QSettings settings;
-    int mode = settings.value(QStringLiteral("display/mode"), 0).toInt();
+    int mode = settings.value(QStringLiteral("display/mode"), 1).toInt();
     switch (mode) {
     case 1:
         m_graphicsView->zoomFitToWidth();
@@ -284,13 +301,15 @@ void HymnViewerPage::startAutoScroll()
     if (!vbar || vbar->maximum() <= 0)
         return;  // 无需滚动
 
+    // 如果已经滚到底部，回到顶部重新开始
+    if (vbar->value() >= vbar->maximum())
+        vbar->setValue(0);
+
     m_autoScrollActive = true;
     m_autoScrollPaused = false;
     m_autoScrollBtn->setText(QStringLiteral("⏸ 停止滚动"));
     m_autoScrollBtn->setChecked(true);
 
-    // 回到顶部开始滚动
-    vbar->setValue(0);
     recalcAutoScrollSpeed();
     m_autoScrollTimer->start();
 }
@@ -343,6 +362,12 @@ void HymnViewerPage::onAutoScrollTick()
     }
 }
 
+void HymnViewerPage::updateSpeedDisplay()
+{
+    if (m_speedLabel)
+        m_speedLabel->setText(QString::number(m_autoScrollSpeed));
+}
+
 void HymnViewerPage::checkAutoScrollStart()
 {
     QSettings settings;
@@ -387,6 +412,40 @@ void HymnViewerPage::keyPressEvent(QKeyEvent *event)
     case Qt::Key_Minus:
         if (event->modifiers() & Qt::ControlModifier) {
             zoomOut();
+            return;
+        }
+        break;
+    case Qt::Key_Space:
+        // 空格键：启动/暂停/继续自动滚动
+        if (!m_autoScrollActive) {
+            startAutoScroll();
+        } else if (!m_autoScrollPaused) {
+            pauseAutoScroll();
+        } else {
+            resumeAutoScroll();
+        }
+        return;
+    case Qt::Key_Up:
+        if (event->modifiers() & Qt::ControlModifier) {
+            // Ctrl+上：增加滚动速度
+            if (m_autoScrollSpeed < 5) {
+                m_autoScrollSpeed++;
+                updateSpeedDisplay();
+                if (m_autoScrollActive && !m_autoScrollPaused)
+                    recalcAutoScrollSpeed();
+            }
+            return;
+        }
+        break;
+    case Qt::Key_Down:
+        if (event->modifiers() & Qt::ControlModifier) {
+            // Ctrl+下：降低滚动速度
+            if (m_autoScrollSpeed > 1) {
+                m_autoScrollSpeed--;
+                updateSpeedDisplay();
+                if (m_autoScrollActive && !m_autoScrollPaused)
+                    recalcAutoScrollSpeed();
+            }
             return;
         }
         break;

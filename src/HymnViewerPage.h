@@ -15,8 +15,6 @@ class QKeyEvent;
 class QLabel;
 class QPushButton;
 class QTimer;
-class QComboBox;
-
 class HymnViewerPage : public QWidget
 {
     Q_OBJECT
@@ -56,15 +54,18 @@ private:
     void onAutoScrollTick();
     void recalcAutoScrollSpeed();
     void checkAutoScrollStart();
+    void updateSpeedDisplay();
 
     ZoomableGraphicsView *m_graphicsView;
     QGraphicsScene *m_scene;
     QLabel *m_titleLabel;
     QLabel *m_pageLabel;
     QLabel *m_zoomLabel;
+    QLabel *m_speedLabel = nullptr;
     QTimer *m_autoScrollTimer = nullptr;
     QPushButton *m_autoScrollBtn = nullptr;
-    QComboBox *m_autoScrollSpeedCombo = nullptr;
+    QPushButton *m_speedUpBtn = nullptr;
+    QPushButton *m_speedDownBtn = nullptr;
     int m_currentIndex;
     int m_autoScrollSpeed = 3;
     int m_autoScrollPixelsPerTick = 0;

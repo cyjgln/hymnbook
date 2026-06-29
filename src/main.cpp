@@ -133,7 +133,7 @@ int main(int argc, char *argv[])
     QApplication app(argc, argv);
     app.setOrganizationName(QStringLiteral("HymnBook"));
     app.setApplicationName(QStringLiteral("HymnBookApp"));
-    app.setApplicationVersion(QStringLiteral("1.3.2"));
+    app.setApplicationVersion(QStringLiteral("1.4.0"));
 
     app.setStyleSheet(QString::fromUtf8(globalStyleSheet));
     app.setWindowIcon(QIcon(QStringLiteral(":/app_icon.png")));

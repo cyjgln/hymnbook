@@ -51,12 +51,12 @@ void ZoomableGraphicsView::zoomReset()
 
 void ZoomableGraphicsView::wheelEvent(QWheelEvent *event)
 {
-    // 鼠标滚轮缩放
-    double delta = event->angleDelta().y();
-    if (delta > 0) {
-        zoomIn();
-    } else if (delta < 0) {
-        zoomOut();
+    // 鼠标滚轮上下滚动歌谱
+    QScrollBar *vbar = verticalScrollBar();
+    if (vbar) {
+        int delta = event->angleDelta().y();
+        int numSteps = delta / 120;
+        vbar->setValue(vbar->value() - numSteps * vbar->singleStep() * 3);
     }
     event->accept();
 }
@@ -73,7 +73,8 @@ void ZoomableGraphicsView::zoomFitToWidth()
     factor = std::clamp(factor, m_minZoom, m_maxZoom);
     m_zoomFactor = factor;
     QGraphicsView::scale(factor, factor);
-    centerOn(r.center());
+    // 定位到歌谱上端
+    verticalScrollBar()->setValue(0);
     emit zoomChanged(m_zoomFactor);
 }
 

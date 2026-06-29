@@ -139,7 +139,7 @@ void SettingsPage::setupUI()
 void SettingsPage::loadSettings()
 {
     QSettings settings;
-    int mode = settings.value(QStringLiteral("display/mode"), 0).toInt();
+    int mode = settings.value(QStringLiteral("display/mode"), 1).toInt();
     auto *btn = m_displayButtonGroup->button(mode);
     if (btn)
         btn->setChecked(true);
