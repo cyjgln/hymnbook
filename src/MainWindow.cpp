@@ -229,13 +229,16 @@ void MainWindow::setupUI()
 
 void MainWindow::setupShortcuts()
 {
-    // F11 全屏切换
+    // F11 全屏切换（全屏时隐藏底部歌名/页码栏，仅保留顶部工具栏和歌谱图片）
     auto *fullscreenShortcut = new QShortcut(QKeySequence(Qt::Key_F11), this);
     connect(fullscreenShortcut, &QShortcut::activated, this, [this]() {
-        if (isFullScreen())
+        if (isFullScreen()) {
             showNormal();
-        else
+            m_hymnViewerPage->setBottomBarVisible(true);
+        } else {
+            m_hymnViewerPage->setBottomBarVisible(false);
             showFullScreen();
+        }
     });
 
     // Ctrl+F 搜索

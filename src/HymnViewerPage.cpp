@@ -233,6 +233,11 @@ void HymnViewerPage::setupUI()
         }
     });
 
+    // 0 键回到歌谱顶部
+    m_shortcutKey0 = new QShortcut(QKeySequence(Qt::Key_0), this);
+    m_shortcutKey0->setContext(Qt::WidgetWithChildrenShortcut);
+    connect(m_shortcutKey0, &QShortcut::activated, this, &HymnViewerPage::scrollToTop);
+
     layout->addWidget(toolbar);
 
     // 图片显示区域
@@ -333,6 +338,19 @@ void HymnViewerPage::zoomIn()
 void HymnViewerPage::zoomOut()
 {
     m_graphicsView->zoomOut();
+}
+
+void HymnViewerPage::setBottomBarVisible(bool visible)
+{
+    m_titleLabel->setVisible(visible);
+    m_pageLabel->setVisible(visible);
+}
+
+void HymnViewerPage::scrollToTop()
+{
+    QScrollBar *vbar = m_graphicsView->verticalScrollBar();
+    if (vbar)
+        vbar->setValue(0);
 }
 
 void HymnViewerPage::resizeEvent(QResizeEvent *event)

@@ -26,6 +26,8 @@ public:
 
     void loadHymn(int index);
     int currentIndex() const { return m_currentIndex; }
+    void setBottomBarVisible(bool visible);
+    void scrollToTop();
 
 signals:
     void previousRequested();
@@ -74,6 +76,7 @@ private:
     QShortcut *m_shortcutSpace = nullptr;
     QShortcut *m_shortcutSpeedUp = nullptr;
     QShortcut *m_shortcutSpeedDown = nullptr;
+    QShortcut *m_shortcutKey0 = nullptr;
     int m_currentIndex;
     int m_autoScrollSpeed = 3;
     int m_autoScrollPixelsPerTick = 0;
