@@ -140,12 +140,20 @@ void SettingsPage::loadSettings()
 {
     QSettings settings;
     int mode = settings.value(QStringLiteral("display/mode"), 1).toInt();
-    auto *btn = m_displayButtonGroup->button(mode);
-    if (btn)
-        btn->setChecked(true);
+
+    // 用 QSignalBlocker 防止 setChecked 触发信号写入冗余默认值
+    {
+        const QSignalBlocker blocker(m_displayButtonGroup);
+        auto *btn = m_displayButtonGroup->button(mode);
+        if (btn)
+            btn->setChecked(true);
+    }
 
     bool autoScroll = settings.value(QStringLiteral("display/autoScroll"), false).toBool();
-    m_autoScrollCheck->setChecked(autoScroll);
+    {
+        const QSignalBlocker blocker(m_autoScrollCheck);
+        m_autoScrollCheck->setChecked(autoScroll);
+    }
 }
 
 void SettingsPage::onDisplayModeChanged(int modeId)

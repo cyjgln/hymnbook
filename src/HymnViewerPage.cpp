@@ -15,12 +15,15 @@
 #include <QKeyEvent>
 #include <QToolBar>
 #include <QFont>
+#include <QIcon>
+#include <QPainter>
 #include <QPixmap>
 #include <QGraphicsPixmapItem>
 #include <QFileInfo>
 #include <QDir>
 #include <QSettings>
 #include <QResizeEvent>
+#include <QShortcut>
 #include <QTimer>
 #include <QScrollBar>
 #include <QMouseEvent>
@@ -114,11 +117,32 @@ void HymnViewerPage::setupUI()
     });
     toolbar->addWidget(m_autoScrollBtn);
 
-    // 滚动速度调节（上下箭头按钮）
+    // 滚动速度调节（上下三角图标按钮）
     auto *speedLabelTitle = new QLabel(QStringLiteral("速度:"), this);
     toolbar->addWidget(speedLabelTitle);
 
-    m_speedDownBtn = new QPushButton(QStringLiteral("▼"), this);
+    // 用 QPainter 绘制三角图标，避免 Unicode 字符依赖系统字体导致显示异常
+    auto makeTriangleIcon = [](bool pointingUp) -> QIcon {
+        QPixmap pix(16, 16);
+        pix.fill(Qt::transparent);
+        QPainter painter(&pix);
+        painter.setRenderHint(QPainter::Antialiasing);
+        painter.setBrush(QColor(QStringLiteral("#5a4a3a")));
+        painter.setPen(Qt::NoPen);
+        QPolygonF triangle;
+        if (pointingUp) {
+            triangle << QPointF(8, 2) << QPointF(2, 13) << QPointF(14, 13);
+        } else {
+            triangle << QPointF(2, 3) << QPointF(14, 3) << QPointF(8, 14);
+        }
+        painter.drawPolygon(triangle);
+        painter.end();
+        return QIcon(pix);
+    };
+
+    m_speedDownBtn = new QPushButton(this);
+    m_speedDownBtn->setIcon(makeTriangleIcon(false));  // 倒三角 = 减速
+    m_speedDownBtn->setIconSize(QSize(14, 14));
     m_speedDownBtn->setFixedWidth(32);
     m_speedDownBtn->setCursor(Qt::PointingHandCursor);
     m_speedDownBtn->setToolTip(QStringLiteral("降低滚动速度 (Ctrl+↓)"));
@@ -138,7 +162,9 @@ void HymnViewerPage::setupUI()
     m_speedLabel->setStyleSheet(QStringLiteral("font-weight: bold; font-size: 14px;"));
     toolbar->addWidget(m_speedLabel);
 
-    m_speedUpBtn = new QPushButton(QStringLiteral("▲"), this);
+    m_speedUpBtn = new QPushButton(this);
+    m_speedUpBtn->setIcon(makeTriangleIcon(true));  // 正三角 = 加速
+    m_speedUpBtn->setIconSize(QSize(14, 14));
     m_speedUpBtn->setFixedWidth(32);
     m_speedUpBtn->setCursor(Qt::PointingHandCursor);
     m_speedUpBtn->setToolTip(QStringLiteral("增加滚动速度 (Ctrl+↑)"));
@@ -151,6 +177,61 @@ void HymnViewerPage::setupUI()
         }
     });
     toolbar->addWidget(m_speedUpBtn);
+
+    // ---- 快捷键（QShortcut 确保焦点在任意子控件时也能响应） ----
+    m_shortcutLeft = new QShortcut(QKeySequence(Qt::Key_Left), this);
+    m_shortcutLeft->setContext(Qt::WidgetWithChildrenShortcut);
+    connect(m_shortcutLeft, &QShortcut::activated, this, &HymnViewerPage::previousRequested);
+
+    m_shortcutRight = new QShortcut(QKeySequence(Qt::Key_Right), this);
+    m_shortcutRight->setContext(Qt::WidgetWithChildrenShortcut);
+    connect(m_shortcutRight, &QShortcut::activated, this, &HymnViewerPage::nextRequested);
+
+    m_shortcutZoomIn = new QShortcut(QKeySequence(Qt::CTRL | Qt::Key_Plus), this);
+    m_shortcutZoomIn->setContext(Qt::WidgetWithChildrenShortcut);
+    connect(m_shortcutZoomIn, &QShortcut::activated, this, &HymnViewerPage::zoomIn);
+    // 兼容小键盘 + 和 = 键
+    auto *shortcutZoomIn2 = new QShortcut(QKeySequence(Qt::CTRL | Qt::Key_Equal), this);
+    shortcutZoomIn2->setContext(Qt::WidgetWithChildrenShortcut);
+    connect(shortcutZoomIn2, &QShortcut::activated, this, &HymnViewerPage::zoomIn);
+
+    m_shortcutZoomOut = new QShortcut(QKeySequence(Qt::CTRL | Qt::Key_Minus), this);
+    m_shortcutZoomOut->setContext(Qt::WidgetWithChildrenShortcut);
+    connect(m_shortcutZoomOut, &QShortcut::activated, this, &HymnViewerPage::zoomOut);
+
+    m_shortcutSpace = new QShortcut(QKeySequence(Qt::Key_Space), this);
+    m_shortcutSpace->setContext(Qt::WidgetWithChildrenShortcut);
+    connect(m_shortcutSpace, &QShortcut::activated, this, [this]() {
+        if (!m_autoScrollActive) {
+            startAutoScroll();
+        } else if (!m_autoScrollPaused) {
+            pauseAutoScroll();
+        } else {
+            resumeAutoScroll();
+        }
+    });
+
+    m_shortcutSpeedUp = new QShortcut(QKeySequence(Qt::CTRL | Qt::Key_Up), this);
+    m_shortcutSpeedUp->setContext(Qt::WidgetWithChildrenShortcut);
+    connect(m_shortcutSpeedUp, &QShortcut::activated, this, [this]() {
+        if (m_autoScrollSpeed < 5) {
+            m_autoScrollSpeed++;
+            updateSpeedDisplay();
+            if (m_autoScrollActive && !m_autoScrollPaused)
+                recalcAutoScrollSpeed();
+        }
+    });
+
+    m_shortcutSpeedDown = new QShortcut(QKeySequence(Qt::CTRL | Qt::Key_Down), this);
+    m_shortcutSpeedDown->setContext(Qt::WidgetWithChildrenShortcut);
+    connect(m_shortcutSpeedDown, &QShortcut::activated, this, [this]() {
+        if (m_autoScrollSpeed > 1) {
+            m_autoScrollSpeed--;
+            updateSpeedDisplay();
+            if (m_autoScrollActive && !m_autoScrollPaused)
+                recalcAutoScrollSpeed();
+        }
+    });
 
     layout->addWidget(toolbar);
 

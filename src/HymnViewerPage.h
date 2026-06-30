@@ -14,6 +14,7 @@ class QGraphicsScene;
 class QKeyEvent;
 class QLabel;
 class QPushButton;
+class QShortcut;
 class QTimer;
 class HymnViewerPage : public QWidget
 {
@@ -66,6 +67,13 @@ private:
     QPushButton *m_autoScrollBtn = nullptr;
     QPushButton *m_speedUpBtn = nullptr;
     QPushButton *m_speedDownBtn = nullptr;
+    QShortcut *m_shortcutLeft = nullptr;
+    QShortcut *m_shortcutRight = nullptr;
+    QShortcut *m_shortcutZoomIn = nullptr;
+    QShortcut *m_shortcutZoomOut = nullptr;
+    QShortcut *m_shortcutSpace = nullptr;
+    QShortcut *m_shortcutSpeedUp = nullptr;
+    QShortcut *m_shortcutSpeedDown = nullptr;
     int m_currentIndex;
     int m_autoScrollSpeed = 3;
     int m_autoScrollPixelsPerTick = 0;
