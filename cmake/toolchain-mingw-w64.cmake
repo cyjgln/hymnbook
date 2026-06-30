@@ -15,7 +15,7 @@ set(QT_HOST_PATH "/usr")
 set(Qt6HostInfo_DIR "/usr/lib/x86_64-linux-gnu/cmake/Qt6HostInfo")
 
 # 目标 Qt（aqtinstall 下载的 Qt6 for Windows）
-set(QT6_INSTALL_PATH "/tmp/qt-windows/6.2.4/mingw_64")
+set(QT6_INSTALL_PATH "/opt/qt-windows/6.4.2/mingw_64")
 set(CMAKE_PREFIX_PATH "${QT6_INSTALL_PATH}")
 
 # 让 find_package 能找到 Qt6

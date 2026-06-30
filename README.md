@@ -1,7 +1,7 @@
 # 诗歌本 HymnBookApp
 
 ![license](https://img.shields.io/badge/license-MIT-blue)
-![version](https://img.shields.io/badge/version-1.2.0-green)
+![version](https://img.shields.io/badge/version-1.4.1-green)
 
 教会诗歌本软件 — 用于聚会、主日敬拜、祷告会、小组聚会等场景。
 

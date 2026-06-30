@@ -6,7 +6,7 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 BUILD_DIR="${SCRIPT_DIR}/build_win"
-QT_WIN="/home/claw/Qt/6.2.4/mingw_64"
+QT_WIN="/opt/qt-windows/6.4.2/mingw_64"
 NAME="HymnBookApp"
 # 从 main.cpp 读取版本号
 VERSION=$(grep 'setApplicationVersion' "${SCRIPT_DIR}/src/main.cpp" | grep -oP '"[^"]+"' | head -1 | tr -d '"')

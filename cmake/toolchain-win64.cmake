@@ -11,7 +11,7 @@ set(CMAKE_CXX_COMPILER x86_64-w64-mingw32-g++)
 set(CMAKE_RC_COMPILER x86_64-w64-mingw32-windres)
 
 # Qt for Windows installation path (from aqtinstall)
-set(QT_WIN_PATH /home/claw/Qt/6.2.4/mingw_64)
+set(QT_WIN_PATH /opt/qt-windows/6.4.2/mingw_64)
 
 # Find root - restricts CMake to search for dependencies only under these paths
 list(APPEND CMAKE_FIND_ROOT_PATH ${QT_WIN_PATH})
